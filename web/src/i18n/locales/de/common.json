@@ -1,0 +1,33 @@
+{
+  "mode": { "auto": "Auto", "manual": "Manuell", "party": "Party", "quiet": "Ruhe", "holiday": "Urlaub" },
+  "off": "Aus",
+  "offWord": "aus",
+  "level": "Stufe {{n}}",
+  "Level": "Stufe {{n}}",
+  "days_one": "Tag",
+  "days_other": "Tage",
+  "months": "Monate",
+  "save": "Einstellungen speichern",
+  "discard": "Verwerfen",
+  "cancel": "Abbrechen",
+  "close": "Schließen",
+  "unsavedChanges": "Ungespeicherte Änderungen",
+  "saved": "Gespeichert",
+  "discardTitle": "Änderungen an „{{section}}“ verwerfen?",
+  "discardConfirm": "Änderungen verwerfen",
+  "showAdvanced": "Erweiterte Einstellungen zeigen",
+  "hideAdvanced": "Erweiterte Einstellungen ausblenden",
+  "advancedNote": "Meist einmal bei der Installation eingestellt.",
+  "loadFailed": "Einstellungen konnten nicht geladen werden",
+  "error": {
+    "unreachable": "Das Gerät ist nicht erreichbar. Prüfe, ob es eingeschaltet und im Netzwerk ist.",
+    "httpStatus": "Das Gerät hat mit HTTP {{status}} geantwortet.",
+    "tooMany": "Zu viele Fehlversuche. Versuche es in {{s}} Sekunden erneut.",
+    "tooManySoon": "Zu viele Fehlversuche. Versuche es in einigen Sekunden erneut.",
+    "wrongPassword": "Falsches Passwort.",
+    "sessionEnded": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    "sdCard": "Die Einstellungen konnten nicht gespeichert werden: Prüfe die SD-Karte.",
+    "keptOffline": "Das Gerät ist nicht erreichbar. Deine Änderungen bleiben erhalten; versuche es erneut, sobald es wieder da ist.",
+    "noAnswer": "Das Gerät hat nicht geantwortet."
+  }
+}

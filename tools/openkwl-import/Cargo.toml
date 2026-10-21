@@ -1,0 +1,17 @@
+[package]
+name = "openkwl-import"
+description = "Reads the settings of a unit running the stock easyControls firmware and writes CONFIG.INI + STATE.BIN"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+openkwl-api = { path = "../../crates/openkwl-api" }
+openkwl-core = { path = "../../crates/openkwl-core" }
+openkwl-config = { path = "../../crates/openkwl-config" }
+heapless = "0.8"
+
+[lints]
+workspace = true

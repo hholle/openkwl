@@ -1,0 +1,22 @@
+[package]
+name = "openkwl-api"
+description = "REST API request/response types shared by the firmware (serde-json-core) and docs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+openkwl-core = { path = "../openkwl-core" }
+openkwl-auth = { path = "../openkwl-auth" }
+serde = { version = "1", default-features = false, features = ["derive"] }
+heapless = { version = "0.8", features = ["serde"] }
+
+[dev-dependencies]
+serde-json-core = "0.6"
+serde_json = "1"
+yaml-rust2 = "0.13"
+
+[lints]
+workspace = true

@@ -1,0 +1,50 @@
+# Rust
+target/
+firmware/target/
+**/*.rs.bk
+
+# Web UI and what npm/pnpm install or log
+node_modules/
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+# Design-system handoff, copied into src/ and public/ (not source)
+web/design/
+web/dist/
+web/tsconfig.tsbuildinfo
+*.tsbuildinfo
+.vite/
+coverage/
+
+# Build outputs and local SD cards
+dist-sd/
+sim-sd/
+sim-sd-*/
+card/
+*.img
+*.raw
+
+# Firmware images: never commit stock or packed images (copyright, size)
+*.bin
+*.BIN
+*.elf
+*.hex
+
+# Local environment and secrets
+.env
+.env.*
+*.local
+mise.local.toml
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Made by scripts/vendor.sh (upstream crate + vendor/serde-json-core.patch)
+vendor/serde-json-core/
+
+# Local screenshots (made by scripts or by hand)
+screenshots/

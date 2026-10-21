@@ -1,0 +1,5 @@
+# The same Rust as mise.toml, for rustup users without mise. Keep both in step.
+[toolchain]
+channel = "1.99.1"
+targets = ["thumbv7m-none-eabi"]
+components = ["rustfmt", "clippy", "llvm-tools"]

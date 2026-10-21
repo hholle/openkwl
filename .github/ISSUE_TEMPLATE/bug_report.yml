@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in openKWL, the web UI, the API or the Home Assistant integration doesn't work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this.
+
+        - **Security problems:** please don't report them here; see SECURITY.md.
+        - **Your ventilation must work right now?** Go back to the original firmware first (docs/INSTALL.md, step 6). It always works.
+        - Please remove passwords, IP addresses you don't want to share and MAC addresses from anything you paste.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: |
+        1. Opened Schedule › Holiday
+        2. Set 1–7 August, saved
+        3. Expected … but …
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - On my unit
+        - In the simulator
+        - Web UI
+        - Home Assistant / MQTT
+        - REST API
+        - Firmware update
+        - Installation / SD card
+        - Tools (openkwl-import, openkwl-pack, card.sh)
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Unit model and article number
+      description: From the sticker behind the front cover. Leave empty for the simulator.
+      placeholder: KWL EC 300 W R, 04232001
+  - type: input
+    id: version
+    attributes:
+      label: openKWL version and build
+      description: Settings › Technical details (or the git commit if you built it yourself)
+      placeholder: 0.1.0, normal build
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Technical details
+      description: Settings › Technical details, copied as text. Especially the last reset cause, faults, SD card and network.
+      render: text
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Settings › Technical details › Show log. For start-up problems, `HELIOS/BOOT.LOG` or the decoded `DEFMT.LOG` of the `sd-log` build.
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, browser, Home Assistant version, what you tried already.

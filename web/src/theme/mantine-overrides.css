@@ -1,0 +1,131 @@
+/* openKWL — the few things Mantine's theme object cannot set. Import after the Mantine styles. */
+
+/* Geist, shipped on the SD card with the UI (SIL Open Font License, see /fonts/OFL.txt) */
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Focus ring: token `focus-ring` (keeps one ring colour across themes) */
+.mantine-focus-auto:focus-visible,
+.mantine-focus-always:focus {
+  outline: 2px solid var(--app-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Disabled controls get their own ground, so they never melt into the card in dark mode */
+.mantine-Button-root:where(:disabled, [data-disabled]):not([data-loading]),
+.mantine-ActionIcon-root:where(:disabled, [data-disabled]):not([data-loading]) {
+  background: var(--app-disabled-bg);
+  color: var(--app-disabled-ink);
+  border-color: transparent;
+}
+.mantine-SegmentedControl-root[data-disabled]:not([data-disabled='false']) {
+  background: var(--app-disabled-bg);
+}
+.mantine-SegmentedControl-root[data-disabled]:not([data-disabled='false']) .mantine-SegmentedControl-label {
+  color: var(--app-disabled-ink);
+}
+
+/* Mode control: unit state, but quieter than the solid brand-coloured fan level next to it */
+.kwl-seg-soft .mantine-SegmentedControl-indicator {
+  background: var(--app-brand-soft);
+  box-shadow: inset 0 0 0 1px var(--app-brand-text);
+}
+.kwl-seg-soft .mantine-SegmentedControl-label[data-active] {
+  color: var(--app-brand-text);
+  font-weight: 600;
+}
+
+/* NavLink (SectionList rows on desktop): the active row is neutral, only its icon has the brand colour */
+.mantine-NavLink-root:where([data-active], [aria-current='page']) {
+  background: var(--app-surface-2);
+  color: var(--mantine-color-text);
+  font-weight: 600;
+}
+.mantine-NavLink-root:where([data-active], [aria-current='page']) .mantine-NavLink-section {
+  color: var(--app-brand);
+}
+
+/* Mode control: the dot under the level Auto is running now.
+   data={[{ value: '2', label: <span>2<span className="kwl-auto-dot" /></span> }, …]} */
+.mantine-SegmentedControl-label { position: relative; }
+.kwl-auto-dot {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 999px;
+  background: var(--mantine-color-dimmed);
+}
+
+/* App background behind cards: <AppShell.Main className="app-main"> */
+.app-main {
+  background: var(--app-surface-0);
+}
+
+/* Reading scale: display (schematic), figure (tiles), reading (tables, status line) */
+.kwl-display,
+.kwl-figure,
+.kwl-reading,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.kwl-display {
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.kwl-figure {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+}
+.kwl-reading {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.kwl-unit {
+  font-size: 0.6em;
+  font-weight: 400;
+  color: var(--mantine-color-dimmed);
+  margin-left: 0.15em;
+}
+@media (max-width: 36em) {
+  .kwl-display {
+    font-size: 22px;
+    line-height: 26px;
+  }
+}
+
+/* Schedule levels: block and chip colours; level 0 (off) is outlined and hatched */
+.kwl-level-0 {
+  background: repeating-linear-gradient(135deg, var(--app-level-0) 0 6px, var(--mantine-color-default-border) 6px 7px);
+  box-shadow: inset 0 0 0 1px var(--mantine-color-gray-4);
+  color: var(--mantine-color-dimmed);
+}
+.kwl-level-1 { background: var(--app-level-1); color: var(--app-on-level-1); }
+.kwl-level-2 { background: var(--app-level-2); color: var(--app-on-level-2); }
+.kwl-level-3 { background: var(--app-level-3); color: var(--app-on-level-3); }
+.kwl-level-4 { background: var(--app-level-4); color: var(--app-on-level-4); }
+
+/* Respect reduced motion: the schematic's flowing dots stop */
+@media (prefers-reduced-motion: reduce) {
+  .kwl-flow-dot {
+    animation: none !important;
+  }
+}

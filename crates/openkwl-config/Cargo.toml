@@ -1,0 +1,24 @@
+[package]
+name = "openkwl-config"
+description = "CONFIG.INI / SECRETS.INI reader and writer, STATE.BIN A/B records and SD write scheduling"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+openkwl-api = { path = "../openkwl-api" }
+openkwl-core = { path = "../openkwl-core" }
+openkwl-auth = { path = "../openkwl-auth" }
+heapless = "0.8"
+# Shortest round-trip float formatting for the INI writer without core::fmt's float code
+# (saves ~12 KB of firmware flash): the vendored serde-json-core's float writer.
+serde-json-core = "0.6"
+
+[dev-dependencies]
+# Reference for the float writer's output (tests only, never linked into the firmware).
+ryu = "1"
+
+[lints]
+workspace = true

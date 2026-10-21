@@ -1,0 +1,33 @@
+{
+  "mode": { "auto": "Auto", "manual": "Manual", "party": "Party", "quiet": "Quiet", "holiday": "Holiday" },
+  "off": "Off",
+  "offWord": "off",
+  "level": "level {{n}}",
+  "Level": "Level {{n}}",
+  "days_one": "day",
+  "days_other": "days",
+  "months": "months",
+  "save": "Save settings",
+  "discard": "Discard",
+  "cancel": "Cancel",
+  "close": "Close",
+  "unsavedChanges": "Unsaved changes",
+  "saved": "Saved",
+  "discardTitle": "Discard your changes to {{section}}?",
+  "discardConfirm": "Discard changes",
+  "showAdvanced": "Show advanced settings",
+  "hideAdvanced": "Hide advanced settings",
+  "advancedNote": "Usually set once by whoever installed the unit.",
+  "loadFailed": "Couldn't load these settings",
+  "error": {
+    "unreachable": "The unit is not reachable. Check that it is powered and on the network.",
+    "httpStatus": "The unit answered with HTTP {{status}}.",
+    "tooMany": "Too many failed attempts. Try again in {{s}} seconds.",
+    "tooManySoon": "Too many failed attempts. Try again in a few seconds.",
+    "wrongPassword": "Wrong password.",
+    "sessionEnded": "Your session ended. Log in again.",
+    "sdCard": "The settings could not be saved: check the SD card.",
+    "keptOffline": "Can't reach the unit. Your changes are kept; try again when it's back.",
+    "noAnswer": "The unit didn't answer."
+  }
+}

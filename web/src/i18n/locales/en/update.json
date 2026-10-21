@@ -1,0 +1,20 @@
+{
+  "title": "Firmware update",
+  "intro": "Install a new openKWL version from an update file (.okwl). The unit checks the whole file before anything changes, then restarts by itself to install it.",
+  "installed": "Installed:",
+  "uploading": "Uploading and checking… {{pct}} %",
+  "checking": "Checking…",
+  "progress": "Upload progress",
+  "failedTitle": "Update not installed",
+  "nothingChanged": "Nothing was changed.",
+  "readyTitle": "Update ready",
+  "readyText": "The file is checked and stored. It installs when the unit restarts.",
+  "installNow": "Install now",
+  "choose": "Choose update file",
+  "askTitle": "Install this update?",
+  "askConfirm": "Install update",
+  "file": "File",
+  "size": "Size",
+  "askText": "The unit checks the whole file first; if anything is wrong, nothing changes. Then it restarts by itself and installs the update: ventilation stops for about {{s}} seconds. Don't switch the unit off meanwhile. You'll need to log in again; settings are kept.",
+  "armed": "An earlier update is waiting to be installed. Restart the unit to install it, then choose this file again."
+}

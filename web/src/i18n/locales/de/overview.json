@@ -1,0 +1,130 @@
+{
+  "state": {
+    "fansOff": "Ventilatoren aus",
+    "fansOffLower": "Ventilatoren aus",
+    "runningAt": "Läuft auf Stufe {{n}}",
+    "program": "{{program}}: {{what}}"
+  },
+  "hours_one": "{{count}} Stunde",
+  "hours_other": "{{count}} Stunden",
+  "sub": {
+    "autoNext": "Auto · ab {{at}}: {{level}}",
+    "untilThen": "Bis {{time}}, danach {{after}}",
+    "then": "Danach {{after}}",
+    "holidayProgram": "Urlaubsprogramm",
+    "until": "Bis {{date}}",
+    "untilRhythm": "Bis {{date}} · {{rhythm}}",
+    "midnight": "Bis Mitternacht, danach Auto",
+    "timer": "Noch {{duration}}, danach Auto",
+    "never": "Bis du Auto wählst"
+  },
+  "hint": {
+    "autoMidnight": "Folgt deinem Zeitplan. Wählst du eine Stufe, gilt sie bis Mitternacht.",
+    "autoTimer": "Folgt deinem Zeitplan. Wählst du eine Stufe, gilt sie für {{duration}}.",
+    "autoNever": "Folgt deinem Zeitplan. Wählst du eine Stufe, gilt sie, bis du Auto wählst.",
+    "never": "{{what}}, bis du Auto wählst.",
+    "midnight": "{{what}} bis Mitternacht, danach Auto.",
+    "midnightManual": "{{what}} bis Mitternacht (manuell), danach Auto.",
+    "timer": "{{what}} noch {{duration}}, danach Auto.",
+    "timerManual": "{{what}} noch {{duration}} (manuell), danach Auto.",
+    "offline": "Die Bedienung ist wieder da, sobald das Gerät erreichbar ist."
+  },
+  "paused": {
+    "never": "Pausiert, bis du Auto wählst.",
+    "untilTime": "Pausiert bis {{time}}. Nach {{program}} geht es mit Auto weiter.",
+    "untilEnds": "Pausiert, bis {{program}} endet. Nach {{program}} geht es mit Auto weiter.",
+    "midnight": "Pausiert bis Mitternacht. Ab der nächsten Änderung geht es mit Auto weiter.",
+    "timer": "Pausiert für {{duration}}. Ab der nächsten Änderung geht es mit Auto weiter."
+  },
+  "control": {
+    "label": "Wie das Gerät läuft",
+    "autoRunsThis": ", Auto nutzt gerade diese Stufe",
+    "programUntil": "{{program}} bis {{time}}",
+    "stop": "Stoppen",
+    "start": "Starten",
+    "party": "Party: mehr Luft",
+    "quiet": "Ruhe: leiser",
+    "partyLength": "Dauer für Party",
+    "quietLength": "Dauer für Ruhe",
+    "holidayUntil": "Urlaubsprogramm bis {{date}}.",
+    "holidayOpen": "Urlaubsprogramm bis zum letzten Tag.",
+    "endHoliday": "Urlaub beenden",
+    "endHolidayTitle": "Urlaubsprogramm jetzt beenden?",
+    "failed": {
+      "auto": "Umschalten auf Auto hat nicht geklappt.",
+      "level": "Die Stufe konnte nicht geändert werden.",
+      "start": "{{program}} konnte nicht gestartet werden.",
+      "stop": "Stoppen hat nicht geklappt.",
+      "endHoliday": "Der Urlaub konnte nicht beendet werden."
+    },
+    "confirm": {
+      "offTitle": "Ventilatoren ausschalten?",
+      "offMidnight": "Die Lüftung steht bis Mitternacht, danach übernimmt Auto.",
+      "offTimer": "Die Lüftung steht für {{duration}}, danach übernimmt Auto.",
+      "offNever": "Die Lüftung steht, bis du eine andere Stufe wählst.",
+      "off": "Ventilatoren ausschalten",
+      "quietTitle": "Ruhe mit ausgeschalteten Ventilatoren starten?",
+      "quietStops": "Die Lüftung steht für {{duration}}, danach {{after}}.",
+      "quiet": "Ruhe starten"
+    }
+  },
+  "air": {
+    "title": "Luft",
+    "estimated": "Aus der Ventilatordrehzahl geschätzt",
+    "measured": "Für diese Stufe gemessen",
+    "freshAir": "Frischluft {{value}}",
+    "bypassOpen": "Kühlung mit Außenluft: Der Bypass ist offen.",
+    "recovering": "Gerade werden {{power}} Wärme zurückgewonnen."
+  },
+  "today": {
+    "title": "Heute",
+    "holidayUntil": "Urlaubsprogramm bis {{date}}: kurze Lüftungsstöße statt des Wochenplans.",
+    "holidayOpen": "Urlaubsprogramm bis zum letzten Tag: kurze Lüftungsstöße statt des Wochenplans.",
+    "editHoliday": "Urlaub bearbeiten ›",
+    "clockMissing": "Die Uhr ist nicht gestellt, deshalb kann der Zeitplan nicht laufen.",
+    "setClock": "Uhr stellen ›",
+    "editSchedule": "Zeitplan bearbeiten ›"
+  },
+  "schematic": {
+    "outside": "Außen",
+    "inside": "Innen",
+    "outdoor": "Außenluft",
+    "supply": "Zuluft",
+    "extract": "Abluft",
+    "exhaust": "Fortluft",
+    "in": "herein",
+    "out": "hinaus",
+    "toRooms": "zu den Räumen",
+    "fromRooms": "aus den Räumen",
+    "fansStopped": "Ventilatoren stehen",
+    "defrost": "Abtauen",
+    "freshAirPaused": "Frischluft pausiert",
+    "bypass": "Bypass",
+    "cooling": "Kühlung",
+    "moving": "stellt um",
+    "frostProtection": "Frostschutz",
+    "heatRecovery": "Wirkungs­grad",
+    "lastKnown": "Letzter Stand: {{time}}",
+    "say": {
+      "noReading": "kein Messwert",
+      "unknown": "unbekannt",
+      "bypassOpen": "Bypass offen: Außenluft kommt zur Kühlung direkt herein. Außenluft {{outdoor}}, Zuluft {{supply}}.",
+      "warmed": "Außenluft ({{outdoor}}) kommt herein und wird auf {{supply}} erwärmt.",
+      "extract": "Abluft ({{extract}}) geht mit {{exhaust}} hinaus.",
+      "recovery": "Wärmerückgewinnung {{value}}.",
+      "state": "{{title}}: {{sub}}.",
+      "supplyStall": "Störung: Der Zuluftventilator dreht sich nicht.",
+      "exhaustStall": "Störung: Der Abluftventilator dreht sich nicht.",
+      "frost": "Frostschutz ist an.",
+      "lastKnown": "Letzter Stand: {{time}}."
+    }
+  },
+  "safety": {
+    "title": "Bevor du dich auf openKWL verlässt",
+    "check": "openKWL ist experimentell. Prüfe nach der Installation, ob beide Ventilatoren laufen und Zuluft und Fortluft in die richtige Richtung strömen.",
+    "combustion": "Nutze es nicht, wenn ein Kamin, Ofen oder Gasgerät auf die Lüftung angewiesen ist (raumluftabhängige Feuerstätte), und lass das Gerät bei starkem Frost nicht unbeaufsichtigt.",
+    "rollback": "Die Original-Firmware ist nur eine SD-Karte entfernt.",
+    "more": "Mehr dazu im Abschnitt „Safety“ in",
+    "gotIt": "Verstanden"
+  }
+}

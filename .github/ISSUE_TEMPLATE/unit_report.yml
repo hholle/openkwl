@@ -1,0 +1,86 @@
+name: Unit report
+description: You installed openKWL on a unit. Tell us how it went, even if everything worked. This is how other models become "tested".
+title: "Unit report: <model>"
+labels: ["unit report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Reports from other models are the most useful contribution right now. docs/PLAN.md §2 lists what is still to be confirmed.
+        Please remove passwords and MAC addresses from anything you paste.
+  - type: input
+    id: model
+    attributes:
+      label: Unit model
+      placeholder: KWL EC 300 W R
+    validations:
+      required: true
+  - type: input
+    id: article
+    attributes:
+      label: Article number
+      description: Sticker behind the front cover, or the stock UI's "Technische Info" (Ref. no.)
+      placeholder: "04232001"
+    validations:
+      required: true
+  - type: input
+    id: stock
+    attributes:
+      label: Stock firmware and bootloader version
+      description: The stock firmware version before installing; the bootloader version from Settings › Technical details
+      placeholder: 2.27, BASBL110
+  - type: input
+    id: version
+    attributes:
+      label: openKWL version and build
+      placeholder: 0.1.0, sd-log build
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Overall result
+      options:
+        - Works, running daily
+        - Works, tested for a short session
+        - Partly works (details below)
+        - Did not start / went back to stock
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: What you checked
+      description: Tick what you confirmed on your unit.
+      options:
+        - label: The dry run with the original firmware worked (INSTALL.md, step 3)
+        - label: Both fans follow levels 1 and 4; rpm shown for both
+        - label: Supply and exhaust are the right way round
+        - label: The four temperatures are plausible
+        - label: The bypass opens and closes in the right direction
+        - label: Settings survive a restart and a power cut
+        - label: Home Assistant discovery works
+        - label: The firmware update from the web UI works
+        - label: Going back to the original firmware works (INSTALL.md, step 6)
+  - type: dropdown
+    id: modules
+    attributes:
+      label: Extension modules
+      multiple: true
+      options:
+        - None
+        - KWL-KNX
+        - BEC panel (not supported)
+        - Heater (not supported)
+        - Other
+  - type: textarea
+    id: board
+    attributes:
+      label: Technical details › Board
+      description: Card-detect level, SD power polarity, mains pulses per second, PHY address; ideally the whole Technical details page.
+      render: text
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything odd, anything that differs from the stock firmware, photos of the board if it looks different.

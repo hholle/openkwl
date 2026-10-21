@@ -1,0 +1,73 @@
+{
+  "badge": {
+    "offline": "Offline",
+    "fault": "Störung",
+    "checkUnit": "Gerät prüfen",
+    "filterDue": "Filter fällig",
+    "clockNotSet": "Uhr nicht gestellt",
+    "defrosting": "Abtauen",
+    "frost": "Frostschutz",
+    "running": "Läuft"
+  },
+  "statusLabel": "Gerätestatus: {{word}}. Übersicht zeigen.",
+  "statusLabelMore": "Gerätestatus: {{word}} und {{more}} weitere. Übersicht zeigen.",
+  "more": "{{n}} weitere ›",
+  "showMore": "Mehr zeigen",
+  "showLess": "Weniger zeigen",
+  "action": {
+    "restart": "Gerät neu starten ›",
+    "backup": "„Sichern und wiederherstellen“ öffnen ›",
+    "confirmFilters": "Filterwechsel bestätigen ›",
+    "setClock": "Uhr stellen ›"
+  },
+  "sensor": {
+    "outdoor": "Außenluftfühler",
+    "supply": "Zuluftfühler",
+    "extract": "Abluftfühler",
+    "exhaust": "Fortluftfühler"
+  },
+  "sensorOpen": "{{sensor}} nicht angeschlossen",
+  "sensorShort": "{{sensor}} kurzgeschlossen",
+  "sensorBody": "Das Gerät lüftet weiter, aber Frostschutz und Bypass können diesen Messwert nicht nutzen.",
+  "offline": {
+    "title": "Gerät nicht erreichbar",
+    "body": "Neuer Versuch alle paar Sekunden.",
+    "bodySince": "Angezeigt werden die letzten Werte von {{time}}. Neuer Versuch alle paar Sekunden."
+  },
+  "supplyStall": {
+    "title": "Störung: Zuluftventilator dreht sich nicht",
+    "body": "Es kommt keine frische Luft herein. Prüfe, ob der Ventilator blockiert ist, und starte dann das Gerät neu."
+  },
+  "exhaustStall": {
+    "title": "Störung: Abluftventilator dreht sich nicht",
+    "body": "Die verbrauchte Luft verlässt das Haus nicht. Prüfe, ob der Ventilator blockiert ist, und starte dann das Gerät neu."
+  },
+  "sdCard": {
+    "title": "SD-Karte kann nicht gelesen werden",
+    "body": "Änderungen an den Einstellungen werden erst wieder gespeichert, wenn die Karte funktioniert."
+  },
+  "configInvalid": {
+    "title": "Einstellungsdatei konnte nicht geladen werden",
+    "body": "Das Gerät läuft mit der letzten funktionierenden Kopie seiner Einstellungen oder, falls es keine gibt, mit den Werkseinstellungen."
+  },
+  "busOvercurrent": {
+    "title": "Modulsteckplatz abgeschaltet",
+    "body": "Am Steckplatz für das Erweiterungsmodul wurde zu viel Strom gezogen, deshalb wurde er abgeschaltet. Die Lüftung läuft weiter, aber die KNX-Steuerung ist nicht verfügbar. Prüfe das Modulkabel und starte dann das Gerät neu."
+  },
+  "filter": {
+    "title": "Filter wechseln",
+    "body": "Beide Filter sind fällig. Wechsle sie und bestätige das dann unter Einstellungen › Filter."
+  },
+  "clock": {
+    "title": "Uhr stellen",
+    "body": "Zeitplan und Sommerkühlung brauchen die Uhrzeit."
+  },
+  "defrost": {
+    "title": "Abtauen",
+    "body": "Die Frischluft pausiert für ein paar Minuten, während Eis im Wärmetauscher schmilzt."
+  },
+  "frost": {
+    "title": "Frostschutz ist an",
+    "body": "Draußen friert es, deshalb läuft der Abluftventilator schneller und hält den Wärmetauscher eisfrei."
+  }
+}

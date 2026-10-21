@@ -1,0 +1,13 @@
+[package]
+name = "openkwl-bus"
+description = "The Helios module bus (RS-485, Modbus RTU): frames and the KWL-KNX module protocol"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

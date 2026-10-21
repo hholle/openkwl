@@ -1,0 +1,31 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/openkwl-core",
+    "crates/openkwl-auth",
+    "crates/openkwl-api",
+    "crates/openkwl-ha",
+    "crates/openkwl-config",
+    "crates/openkwl-app",
+    "crates/openkwl-bus",
+    "crates/openkwl-update",
+    "tools/openkwl-pack",
+    "tools/openkwl-import",
+    "tools/openkwl-sim",
+]
+# The firmware is built for thumbv7m-none-eabi with its own .cargo/config.toml.
+exclude = ["firmware"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/hholle/openkwl"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Small float parser instead of core's (saves ~13 KB of firmware flash), see vendor/README.md.
+[patch.crates-io]
+serde-json-core = { path = "vendor/serde-json-core" }

@@ -1,0 +1,13 @@
+[package]
+name = "openkwl-update"
+description = "openKWL update packages (firmware image + web UI): format, streaming reader, image checks, the settings.ini switch"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,37 @@
+{
+  "name": "openkwl-web",
+  "private": true,
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "Web UI for openKWL, served gzipped from the SD card",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "package:sd": "pnpm build && node scripts/package-sd.mjs",
+    "gen:api": "pnpm --package=openapi-typescript@7.13.0 --package=typescript@5.9.3 dlx openapi-typescript ../api/openapi.yaml -o src/api/schema.d.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@mantine/core": "9.7.2",
+    "@mantine/dates": "9.7.2",
+    "@mantine/form": "9.7.2",
+    "@mantine/hooks": "9.7.2",
+    "@tabler/icons-react": "3.49.0",
+    "dayjs": "1.11.23",
+    "i18next": "26.5.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "react-i18next": "17.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "state": {
+    "fansOff": "Fans off",
+    "fansOffLower": "fans off",
+    "runningAt": "Running at level {{n}}",
+    "program": "{{program}}: {{what}}"
+  },
+  "hours_one": "{{count}} hour",
+  "hours_other": "{{count}} hours",
+  "sub": {
+    "autoNext": "Auto · next: {{level}} at {{at}}",
+    "untilThen": "Until {{time}}, then {{after}}",
+    "then": "Then {{after}}",
+    "holidayProgram": "Holiday program",
+    "until": "Until {{date}}",
+    "untilRhythm": "Until {{date}} · {{rhythm}}",
+    "midnight": "Until midnight, then Auto",
+    "timer": "For {{duration}} more, then Auto",
+    "never": "Until you choose Auto"
+  },
+  "hint": {
+    "autoMidnight": "Follows your schedule. Choosing a level overrides it until midnight.",
+    "autoTimer": "Follows your schedule. Choosing a level overrides it for {{duration}}.",
+    "autoNever": "Follows your schedule. Choosing a level overrides it until you choose Auto.",
+    "never": "{{what}} until you choose Auto.",
+    "midnight": "{{what}} until midnight, then Auto.",
+    "midnightManual": "{{what}} until midnight (manual), then Auto.",
+    "timer": "{{what}} for {{duration}} more, then Auto.",
+    "timerManual": "{{what}} for {{duration}} more (manual), then Auto.",
+    "offline": "Controls are back when the unit is reachable."
+  },
+  "paused": {
+    "never": "Paused until you choose Auto.",
+    "untilTime": "Paused until {{time}}. Auto picks up after {{program}}.",
+    "untilEnds": "Paused until {{program}} ends. Auto picks up after {{program}}.",
+    "midnight": "Paused until midnight. Auto picks up at the next change.",
+    "timer": "Paused for {{duration}}. Auto picks up at the next change."
+  },
+  "control": {
+    "label": "How the unit runs",
+    "autoRunsThis": ", Auto runs this level now",
+    "programUntil": "{{program}} until {{time}}",
+    "stop": "Stop",
+    "start": "Start",
+    "party": "Party: more air",
+    "quiet": "Quiet: less noise",
+    "partyLength": "Party length",
+    "quietLength": "Quiet length",
+    "holidayUntil": "Holiday program until {{date}}.",
+    "holidayOpen": "Holiday program until its last day.",
+    "endHoliday": "End holiday",
+    "endHolidayTitle": "End the holiday program now?",
+    "failed": {
+      "auto": "Couldn't switch to Auto.",
+      "level": "Couldn't change the level.",
+      "start": "Couldn't start {{program}}.",
+      "stop": "Couldn't stop.",
+      "endHoliday": "Couldn't end the holiday."
+    },
+    "confirm": {
+      "offTitle": "Switch the fans off?",
+      "offMidnight": "Ventilation stops until midnight, then Auto takes over.",
+      "offTimer": "Ventilation stops for {{duration}}, then Auto takes over.",
+      "offNever": "Ventilation stops until you choose another level.",
+      "off": "Switch fans off",
+      "quietTitle": "Start Quiet with the fans off?",
+      "quietStops": "Ventilation stops for {{duration}}, then {{after}}.",
+      "quiet": "Start Quiet"
+    }
+  },
+  "air": {
+    "title": "Air",
+    "estimated": "Estimated from the fan speed",
+    "measured": "Measured for this level",
+    "freshAir": "Fresh air {{value}}",
+    "bypassOpen": "Cooling with outdoor air: the bypass is open.",
+    "recovering": "Recovering {{power}} of heat right now."
+  },
+  "today": {
+    "title": "Today",
+    "holidayUntil": "Holiday program until {{date}}: short bursts instead of the weekly schedule.",
+    "holidayOpen": "Holiday program until its last day: short bursts instead of the weekly schedule.",
+    "editHoliday": "Edit holiday ›",
+    "clockMissing": "The clock isn't set, so the schedule can't run.",
+    "setClock": "Set the clock ›",
+    "editSchedule": "Edit schedule ›"
+  },
+  "schematic": {
+    "outside": "Outside",
+    "inside": "Inside",
+    "outdoor": "Outdoor air",
+    "supply": "Supply air",
+    "extract": "Extract air",
+    "exhaust": "Exhaust air",
+    "in": "in",
+    "out": "out",
+    "toRooms": "to rooms",
+    "fromRooms": "from rooms",
+    "fansStopped": "fans stopped",
+    "defrost": "Defrost",
+    "freshAirPaused": "fresh air paused",
+    "bypass": "Bypass",
+    "cooling": "cooling",
+    "moving": "moving",
+    "frostProtection": "frost protection",
+    "heatRecovery": "heat recovery",
+    "lastKnown": "Last known at {{time}}",
+    "say": {
+      "noReading": "no reading",
+      "unknown": "unknown",
+      "bypassOpen": "Bypass open: outdoor air goes straight in for cooling. Outdoor air {{outdoor}}, supply air {{supply}}.",
+      "warmed": "Outdoor air {{outdoor}} comes in and is warmed to {{supply}}.",
+      "extract": "Extract air {{extract}} leaves at {{exhaust}}.",
+      "recovery": "Heat recovery {{value}}.",
+      "state": "{{title}}: {{sub}}.",
+      "supplyStall": "Fault: the supply fan is not turning.",
+      "exhaustStall": "Fault: the exhaust fan is not turning.",
+      "frost": "Frost protection is on.",
+      "lastKnown": "Last known at {{time}}."
+    }
+  },
+  "safety": {
+    "title": "Before you rely on openKWL",
+    "check": "openKWL is experimental. After installing, check that both fans run and that supply and exhaust air go the right way.",
+    "combustion": "Don't use it where a fireplace, stove or gas appliance depends on the ventilation (room-air-dependent combustion), and don't leave the unit unattended in deep frost.",
+    "rollback": "The original firmware is one SD card away.",
+    "more": "Details: the Safety section in",
+    "gotIt": "Got it"
+  }
+}

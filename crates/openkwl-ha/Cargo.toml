@@ -1,0 +1,21 @@
+[package]
+name = "openkwl-ha"
+description = "MQTT topic layout, Home Assistant discovery payloads, state JSON and command parsing"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+openkwl-api = { path = "../openkwl-api" }
+openkwl-core = { path = "../openkwl-core" }
+serde = { version = "1", default-features = false, features = ["derive"] }
+heapless = "0.8"
+serde-json-core = "0.6"
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

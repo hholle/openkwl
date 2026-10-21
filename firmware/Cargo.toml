@@ -1,0 +1,68 @@
+[package]
+name = "openkwl-fw"
+description = "Firmware for the Helios easyControls main controller (STM32F2x7): the hardware layer around openkwl-app"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/hholle/openkwl"
+publish = false
+
+[dependencies]
+openkwl-app = { path = "../crates/openkwl-app" }
+openkwl-api = { path = "../crates/openkwl-api" }
+openkwl-auth = { path = "../crates/openkwl-auth" }
+openkwl-bus = { path = "../crates/openkwl-bus" }
+openkwl-update = { path = "../crates/openkwl-update" }
+openkwl-config = { path = "../crates/openkwl-config" }
+openkwl-core = { path = "../crates/openkwl-core" }
+openkwl-ha = { path = "../crates/openkwl-ha" }
+
+embassy-stm32 = { version = "0.6", features = ["stm32f207vc", "time-driver-tim2", "exti", "unstable-pac", "chrono", "defmt"] }
+embassy-executor = { version = "0.10", features = ["platform-cortex-m", "executor-thread", "executor-interrupt", "defmt"] }
+embassy-time = { version = "0.5", features = ["defmt", "tick-hz-32_768"] }
+embassy-sync = { version = "0.8", features = ["defmt"] }
+embassy-futures = "0.1"
+embassy-net = { version = "0.9", features = ["defmt", "tcp", "udp", "dhcpv4", "dhcpv4-hostname", "dns", "medium-ethernet", "proto-ipv4", "multicast"] }
+cortex-m = { version = "0.7", features = ["critical-section-single-core", "inline-asm"] }
+cortex-m-rt = { version = "0.7", features = ["set-vtor", "set-sp", "paint-stack"] }
+defmt = "1"
+defmt-rtt = { version = "1", optional = true }
+critical-section = "1"
+# Panic messages need core::fmt (~37 KB): only with --features panic-messages (bench/probe).
+panic-probe = { version = "1", optional = true }
+static_cell = "2"
+heapless = "0.8"
+embedded-io-async = "0.7"
+# No defmt-log: its Debug formatting pulls in core::fmt string escaping (~3 KB).
+embedded-sdmmc = { version = "0.10", default-features = false }
+rand_core = { version = "0.6", default-features = false }
+block-device-driver = "0.2"
+
+[features]
+# The image for the unit: firmware update from the web UI, no log output (nothing receives it
+# without a probe), a panic restarts the unit.
+default = ["update"]
+# Firmware update from the web UI (`update.rs`). Only the default build has room for it.
+update = []
+# Logs over RTT to a probe (probe-rs attach / probe-rs run), panics stop in the probe. Build
+# with --no-default-features --features rtt and DEFMT_LOG=info (or warn).
+rtt = ["dep:defmt-rtt", "dep:panic-probe"]
+# Print panic messages over RTT (needs a probe; image may exceed the stock slot size).
+panic-messages = ["rtt", "panic-probe/print-defmt"]
+# Debugging without a probe: logs to HELIOS/DEFMT.LOG on the SD card, panics and hard faults
+# are logged and restart the unit. Build with --no-default-features --features sd-log.
+sd-log = []
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+debug = 2
+panic = "abort"
+
+[profile.dev]
+opt-level = "s"
+
+# Small float parser instead of core's (saves ~13 KB of flash), see ../vendor/README.md.
+[patch.crates-io]
+serde-json-core = { path = "../vendor/serde-json-core" }

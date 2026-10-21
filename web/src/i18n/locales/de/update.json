@@ -1,0 +1,20 @@
+{
+  "title": "Firmware-Update",
+  "intro": "Installiere eine neue openKWL-Version aus einer Update-Datei (.okwl). Das Gerät prüft die ganze Datei, bevor sich etwas ändert, und startet dann von selbst neu, um sie zu installieren.",
+  "installed": "Installiert:",
+  "uploading": "Wird hochgeladen und geprüft … {{pct}} %",
+  "checking": "Wird geprüft …",
+  "progress": "Fortschritt des Hochladens",
+  "failedTitle": "Update nicht installiert",
+  "nothingChanged": "Es wurde nichts geändert.",
+  "readyTitle": "Update bereit",
+  "readyText": "Die Datei ist geprüft und gespeichert. Sie wird beim Neustart des Geräts installiert.",
+  "installNow": "Jetzt installieren",
+  "choose": "Update-Datei auswählen",
+  "askTitle": "Dieses Update installieren?",
+  "askConfirm": "Update installieren",
+  "file": "Datei",
+  "size": "Größe",
+  "askText": "Das Gerät prüft zuerst die ganze Datei; ist etwas nicht in Ordnung, ändert sich nichts. Dann startet es von selbst neu und installiert das Update: Die Lüftung steht etwa {{s}} Sekunden still. Schalte das Gerät in der Zwischenzeit nicht aus. Danach musst du dich erneut anmelden; die Einstellungen bleiben erhalten.",
+  "armed": "Ein früheres Update wartet noch auf die Installation. Starte das Gerät neu, um es zu installieren, und wähle diese Datei dann noch einmal."
+}

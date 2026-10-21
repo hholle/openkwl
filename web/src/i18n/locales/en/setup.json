@@ -1,0 +1,43 @@
+{
+  "steps": {
+    "password": "Password",
+    "check": "Check the settings",
+    "done": "Done"
+  },
+  "stepOf": "Step {{n}} of {{total}} · {{name}}",
+  "closesIn": "Setup closes in {{min}} min",
+  "closed": {
+    "title": "Setup has closed",
+    "text": "For safety, setup is only open for 30 minutes after the unit is switched on. Switch the unit off and on again, then reload this page.",
+    "reload": "Reload page"
+  },
+  "ready": {
+    "title": "The unit is ready",
+    "text": "You can change the schedule and all settings at any time.",
+    "overview": "Open the overview",
+    "homeAssistant": "Connect Home Assistant"
+  },
+  "password": {
+    "title": "Choose a password",
+    "intro": "You'll use it to open this page. There is no password reset; if you forget it, you'll need the SD card.",
+    "new": "New password",
+    "minLength": "At least {{n}} characters.",
+    "repeat": "Repeat password",
+    "mismatch": "The passwords differ.",
+    "continue": "Continue"
+  },
+  "review": {
+    "title": "Check the settings",
+    "takenOver": "These settings were taken over from the original controller.",
+    "defaults": "No settings from the original controller were found, so these are the defaults.",
+    "unit": "Unit",
+    "network": "Network",
+    "automatic": "automatic",
+    "fanVoltage": "Fan voltage, level {{n}}",
+    "schedule": "Weekly schedule",
+    "later": "Everything can be changed later under Schedule and Settings.",
+    "back": "Back",
+    "confirm": "These are right"
+  },
+  "wrongHost": "Open setup by the unit's address or name (for example http://openkwl.local/ or its IP address), not through another web address."
+}

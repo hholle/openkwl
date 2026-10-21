@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest an idea or an improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check docs/PLAN.md and the open issues first; it may be planned already.
+        Keep in mind that the firmware has very little flash left (it must fit the stock 223.5 KB slot), so small, focused ideas have the best chance.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would it solve?
+      description: Describe the situation, not the solution yet.
+      placeholder: When I air the bedroom in the morning, the unit …
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: How could it work? In the web UI, in Home Assistant, in the API?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Could a Home Assistant automation or the existing settings do it already?
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Web UI
+        - Home Assistant / MQTT
+        - REST API
+        - Schedule and modes
+        - Control logic (frost, bypass, fans)
+        - Installation and updates
+        - Documentation
+        - Other
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to implement this myself

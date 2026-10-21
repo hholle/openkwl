@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Übersicht",
+    "schedule": "Zeitplan",
+    "settings": "Einstellungen",
+    "pages": "Seiten",
+    "attention": "{{page}}: bitte ansehen"
+  },
+  "title": {
+    "login": "Anmelden",
+    "setup": "Einrichten"
+  },
+  "login": {
+    "title": "Anmelden",
+    "password": "Passwort",
+    "enterPassword": "Gib das Passwort ein",
+    "remember": "In diesem Browser angemeldet bleiben",
+    "rememberHint": "Bis du dich abmeldest oder das Gerät neu startet. Nur auf eigenen Geräten verwenden.",
+    "tryAgainIn": "Erneut versuchen in {{s}} s",
+    "submit": "Anmelden",
+    "wrong": "Falsches Passwort",
+    "limited": "Zu viele Versuche",
+    "unreachable": "Das Gerät ist nicht erreichbar. Prüfe, ob es eingeschaltet ist, und lade die Seite neu."
+  },
+  "language": {
+    "title": "Sprache",
+    "intro": "Die Sprache dieser Seite in diesem Browser. Home Assistant behält seine eigenen Namen.",
+    "label": "Sprache",
+    "auto": "Automatisch ({{name}})"
+  }
+}

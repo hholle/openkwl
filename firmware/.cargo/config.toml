@@ -1,0 +1,12 @@
+[build]
+target = "thumbv7m-none-eabi"
+
+[target.thumbv7m-none-eabi]
+# Flashing is deliberately not configured: install via the SD card (docs/INSTALL.md).
+# For bench work with a probe: runner = "probe-rs run --chip STM32F207VGTx"
+rustflags = ["-C", "link-arg=--nmagic", "-C", "link-arg=-Tlink.x", "-C", "link-arg=-Tdefmt.x"]
+
+[env]
+# No log in the normal build: nothing receives it (RTT needs a probe), and every message costs
+# flash. card.sh builds the sd-log debug image with DEFMT_LOG=info; set it for an rtt build.
+DEFMT_LOG = "off"

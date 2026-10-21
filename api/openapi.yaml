@@ -1,0 +1,1339 @@
+openapi: 3.1.0
+info:
+  title: openKWL device API
+  version: 1.0.0
+  description: |
+    REST API of the replacement firmware for the Helios KWL EC 300 W R.
+
+    The Rust types in `crates/openkwl-api` are the reference for this contract; keep both in sync.
+
+    - The device speaks plain HTTP. Bearer tokens are readable on the wire, so keep the unit
+      on a trusted network or put a TLS reverse proxy in front of it.
+    - Every endpoint except `POST /auth/login` and `/setup` needs `Authorization: Bearer <token>`.
+    - Until the first password is set (`POST /setup`), every other endpoint answers
+      403 `setup_required`.
+    - Request bodies are limited to 2048 bytes (413 above that); `PUT /config/import` takes up to 12 KB.
+    - Units: °C, V, seconds unless a field name says otherwise. Missing readings are `null`.
+    - `PUT` replaces a whole config object; `PATCH /control` is a partial update.
+servers:
+  - url: /api/v1
+security:
+  - bearer: []
+
+paths:
+  /setup:
+    get:
+      operationId: getSetup
+      summary: Whether first-time setup is open
+      security: []
+      responses:
+        '200':
+          description: Setup state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SetupStatus' }
+    post:
+      operationId: setup
+      summary: Set the first admin password
+      description: |
+        Accepted only while no password exists and within 30 minutes after power-on
+        (power-cycle to reopen the window). Logs the caller in.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetupRequest' }
+      responses:
+        '200':
+          description: Password set, logged in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /auth/login:
+    post:
+      operationId: login
+      summary: Exchange the admin password for a session token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Revoke the calling session
+      responses:
+        '204': { description: Logged out }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/password:
+    post:
+      operationId: changePassword
+      summary: Change the admin password
+      description: On success every session, including the caller's, is revoked.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PasswordChangeRequest' }
+      responses:
+        '204': { description: Password changed }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /status:
+    get:
+      operationId: getStatus
+      summary: Live readings
+      responses:
+        '200':
+          description: Current status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Status' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /control:
+    get:
+      operationId: getControl
+      summary: Current level and program
+      responses:
+        '200':
+          description: Current control state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Control' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      operationId: updateControl
+      summary: Change level and/or start or end a timed program
+      description: |
+        While a holiday program runs (`/status` `holiday` is set), every change except
+        `end_program` is refused with 422 (`field` `mode` or `level`, message "a holiday program
+        is running; end it first"): end the holiday with `PUT /config/holiday` (`enabled: false`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ControlRequest' }
+      responses:
+        '200':
+          description: New control state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Control' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /config/bypass:
+    get:
+      operationId: getBypassConfig
+      summary: Read bypass settings
+      responses:
+        '200':
+          description: Bypass settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BypassConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putBypassConfig
+      summary: Replace bypass settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BypassConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BypassConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/frost:
+    get:
+      operationId: getFrostConfig
+      summary: Read frost-protection settings
+      responses:
+        '200':
+          description: Frost-protection settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FrostConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putFrostConfig
+      summary: Replace frost-protection settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FrostConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FrostConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/network:
+    get:
+      operationId: getNetworkConfig
+      summary: Read network settings
+      responses:
+        '200':
+          description: Stored network settings (may differ from the running ones until reboot)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetworkConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putNetworkConfig
+      summary: Replace network settings
+      description: Takes effect after `POST /system/reboot`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NetworkConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NetworkConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/mqtt:
+    get:
+      operationId: getMqttConfig
+      summary: Read MQTT settings
+      responses:
+        '200':
+          description: MQTT settings (the password is never returned)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MqttConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putMqttConfig
+      summary: Replace MQTT settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MqttConfigUpdate' }
+      responses:
+        '200':
+          description: Saved settings; the client reconnects with them
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MqttConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/fans:
+    get:
+      operationId: getFanConfig
+      summary: Read fan voltages and air flow
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FanConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putFanConfig
+      summary: Replace fan voltages and air flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FanConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FanConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/programs:
+    get:
+      operationId: getProgramConfig
+      summary: Read party/quiet defaults
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgramConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putProgramConfig
+      summary: Replace party/quiet defaults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProgramConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgramConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/holiday:
+    get:
+      operationId: getHolidayConfig
+      summary: Read the holiday program
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HolidayConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putHolidayConfig
+      summary: Replace the holiday program
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HolidayConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HolidayConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/time:
+    get:
+      operationId: getTimeConfig
+      summary: Read clock and SNTP settings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TimeConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putTimeConfig
+      summary: Replace clock and SNTP settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TimeConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TimeConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/filter:
+    get:
+      operationId: getFilterConfig
+      summary: Read the filter-change interval
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FilterConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putFilterConfig
+      summary: Replace the filter-change interval
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FilterConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FilterConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/schedule:
+    get:
+      operationId: getScheduleConfig
+      summary: Read weekly-program settings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScheduleConfig' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      operationId: putScheduleConfig
+      summary: Replace weekly-program settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScheduleConfig' }
+      responses:
+        '200':
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScheduleConfig' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/schedule/{profile}:
+    parameters:
+      - name: profile
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1, maximum: 5 }
+    get:
+      operationId: getScheduleProfile
+      summary: Read one weekly-program profile
+      responses:
+        '200':
+          description: Profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScheduleProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: putScheduleProfile
+      summary: Replace one weekly-program profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScheduleProfile' }
+      responses:
+        '200':
+          description: Saved profile
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ScheduleProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /config/export:
+    get:
+      operationId: exportConfig
+      summary: Download CONFIG.INI
+      description: Human-readable settings file; secrets (passwords) are not included.
+      responses:
+        '200':
+          description: INI text
+          content:
+            text/plain:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /config/import:
+    put:
+      operationId: importConfig
+      summary: Upload and apply a CONFIG.INI
+      description: |
+        Up to 12 KB. The whole file is validated first; nothing is applied on error. The [device]
+        section is read-only and ignored.
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema: { type: string }
+      responses:
+        '204': { description: Applied }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '422': { $ref: '#/components/responses/Invalid' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /filter/reset:
+    post:
+      operationId: resetFilter
+      summary: Restart the filter-change interval
+      responses:
+        '204': { description: Reset }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /log:
+    get:
+      operationId: getLog
+      summary: Recent log lines (RAM ring buffer)
+      responses:
+        '200':
+          description: Log text, oldest first
+          content:
+            text/plain:
+              schema: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /system/time:
+    post:
+      operationId: setTime
+      summary: Set the clock (e.g. from the browser when SNTP is off)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SetTimeRequest' }
+      responses:
+        '204': { description: Clock set }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Invalid' }
+
+  /system:
+    get:
+      operationId: getSystemInfo
+      summary: Firmware and device information
+      responses:
+        '200':
+          description: Firmware and device information
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemInfo' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /system/details:
+    get:
+      operationId: getSystemDetails
+      summary: Everything the firmware knows about itself (advanced view)
+      responses:
+        '200':
+          description: Firmware, chip, memory, network, time, MQTT, storage and stock details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SystemDetails' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /system/update:
+    put:
+      operationId: uploadUpdate
+      summary: Upload an update package (firmware and web UI); installs at the next restart
+      description: |
+        The body is an openKWL update package (`openkwl-pack bundle`): the firmware image for the
+        stock bootloader, optionally followed by the web UI files. The unit stores it on the SD
+        card while checking it (package checksum, image checksum, the bootloader's start rules)
+        and only then points `settings.ini` (`FwBasis=`) at the new image, keeping the original
+        as `HELIOS/SETTINGS.BAK`. The bootloader installs it at the next restart
+        (`POST /system/reboot`); the web UI switches together with the firmware. Not available
+        in debug builds (503).
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary, maxLength: 2097152 }
+      responses:
+        '204': { description: Stored and checked; installs at the next restart }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: Another update is being uploaded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiError' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+
+  /system/reboot:
+    post:
+      operationId: reboot
+      summary: Restart the controller after the response is sent
+      responses:
+        '202': { description: Rebooting }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: 64 lowercase hex characters from `POST /auth/login`.
+
+  responses:
+    BadRequest:
+      description: Body is not valid JSON, has wrong types, or a string exceeds its capacity
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unauthorized:
+      description: Missing/expired token, or wrong password
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Invalid:
+      description: A value is out of range; `field` names it
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    TooManyRequests:
+      description: Login throttled after repeated failures
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Forbidden:
+      description: Setup is not open (a password exists, or the setup window has closed)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    NotFound:
+      description: No such resource
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    PayloadTooLarge:
+      description: Body larger than the device accepts
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    Unavailable:
+      description: Settings could not be stored (e.g. SD card missing)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+
+  schemas:
+    ApiError:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [bad_request, invalid, unauthorized, setup_required, not_found, method_not_allowed,
+                 conflict, payload_too_large, too_many_requests, internal, unavailable]
+        message: { type: string }
+        field: { type: string }
+        retry_after_s: { type: integer, minimum: 0 }
+
+    LoginRequest:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string, minLength: 1, maxLength: 64 }
+        remember:
+          type: boolean
+          default: false
+          description: |
+            Stay logged in on this device: the session lasts 30 days without use (90 days at most)
+            instead of 30 minutes (12 hours). Logout, a password change and a restart of the unit
+            still end it.
+
+    LoginResponse:
+      type: object
+      required: [token, idle_timeout_s, expires_in_s]
+      properties:
+        token: { type: string, pattern: '^[0-9a-f]{64}$' }
+        idle_timeout_s: { type: integer, minimum: 0 }
+        expires_in_s: { type: integer, minimum: 0 }
+
+    PasswordChangeRequest:
+      type: object
+      required: [current_password, new_password]
+      properties:
+        current_password: { type: string, minLength: 1, maxLength: 64 }
+        new_password:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: At least 10 characters, at most 64 bytes UTF-8, different from the current one.
+
+    Mode:
+      type: string
+      enum: [manual, auto, party, quiet, holiday]
+      description: |
+        `manual` runs at `level` until changed; `auto` follows the weekly program; `party`
+        (boost) and `quiet` run for a limited time, then return; `holiday` runs bursts between
+        the configured dates (read-only here). Priority: party/quiet > holiday > auto/manual.
+
+    BaseMode:
+      type: string
+      enum: [manual, auto]
+      description: What runs when no party/quiet program or holiday overrides it.
+
+    Control:
+      type: object
+      required: [mode, level, remaining_s, auto_return_s, base, manual_level]
+      properties:
+        mode: { $ref: '#/components/schemas/Mode' }
+        level: { type: integer, minimum: 0, maximum: 4, description: 0 stops both fans. }
+        remaining_s:
+          type: [integer, 'null']
+          minimum: 0
+          description: Seconds left in a party/quiet program; null otherwise.
+        auto_return_s:
+          type: [integer, 'null']
+          minimum: 0
+          description: |
+            Seconds until manual mode returns to auto (ScheduleConfig.auto_return_min); null when
+            not in manual mode or the timer is off. 0 = as soon as a running program ends.
+        base:
+          $ref: '#/components/schemas/BaseMode'
+          description: What a party/quiet program or holiday returns to.
+        manual_level: { type: integer, minimum: 0, maximum: 4, description: 'Level of manual mode, also while another mode runs.' }
+
+    ControlRequest:
+      type: object
+      description: |
+        At least one of `mode` and `level`, or `end_program` alone.
+        - `level` alone: changes a running party/quiet program's level, otherwise switches to manual
+          (leaving auto starts the auto-return timer, if configured).
+        - `manual` (optionally with `level`) / `auto` (without `level`): end a running program.
+        - `party`/`quiet`: start a program; `level` and `duration_min` default to `/config/programs`.
+        - `end_program: true`: ends a running party/quiet program early; the base mode (manual
+          level or auto) takes over. Without a program it changes nothing.
+        - `holiday` is rejected (422); configure it in `/config/holiday`.
+        - While a holiday runs, everything but `end_program` is rejected (422).
+      properties:
+        mode: { $ref: '#/components/schemas/Mode' }
+        level: { type: integer, minimum: 0, maximum: 4 }
+        duration_min: { type: integer, minimum: 5, maximum: 180 }
+        end_program: { type: boolean }
+
+    Temperatures:
+      type: object
+      required: [outdoor, supply, extract, exhaust]
+      properties:
+        outdoor: { type: [number, 'null'], description: T1 Außenluft }
+        supply: { type: [number, 'null'], description: T2 Zuluft }
+        extract: { type: [number, 'null'], description: T3 Abluft }
+        exhaust: { type: [number, 'null'], description: T4 Fortluft }
+
+    Fan:
+      type: object
+      required: [volts, duty_pct, rpm, stalled, airflow_m3h]
+      properties:
+        volts: { type: number, description: 'Commanded control voltage (0–10 V), after frost boost/stop.' }
+        duty_pct: { type: integer, minimum: 0, maximum: 100, description: 'PWM duty; 0 below the 1.65 V cut-off.' }
+        rpm: { type: integer, minimum: 0 }
+        stalled: { type: boolean }
+        airflow_m3h: { type: [number, 'null'], description: 'm³/h: measured value per level from the settings, else estimated from rpm; null when stopped or unknown.' }
+
+    BypassStatus:
+      type: object
+      required: [open, moving]
+      properties:
+        open: { type: boolean }
+        moving: { type: boolean }
+
+    FrostState:
+      type: string
+      enum: [idle, armed, preheat_wait, boost_start, boost_check, boost_hold,
+             defrost_check, defrost, test_run]
+
+    FrostStatus:
+      type: object
+      required: [state, active, supply_stopped, exhaust_boost_v, defrost]
+      properties:
+        state: { $ref: '#/components/schemas/FrostState' }
+        active: { type: boolean }
+        supply_stopped: { type: boolean }
+        exhaust_boost_v: { type: number }
+        defrost: { type: boolean, description: '"Info 2 – Frostschutz WT": a defrost cycle is running.' }
+
+    Fault:
+      type: string
+      enum: [supply_fan_stall, exhaust_fan_stall,
+             outdoor_sensor_open, supply_sensor_open, extract_sensor_open, exhaust_sensor_open,
+             outdoor_sensor_short, supply_sensor_short, extract_sensor_short, exhaust_sensor_short,
+             sd_card, filter_change, time_not_set, config_invalid, bus_overcurrent]
+      description: |
+        `filter_change` and `time_not_set` are notices; `config_invalid` means CONFIG.INI failed to
+        load and the last good copy is in use; `bus_overcurrent` means the module bus supply was
+        switched off after repeated overcurrent (extension modules such as the KWL-KNX have no power).
+
+    HeatRecovery:
+      type: object
+      description: Estimate from configured air flow (`/config/fans`) and T1/T2.
+      required: [power_w, heating_kwh, cooling_kwh]
+      properties:
+        power_w:
+          type: [number, 'null']
+          description: Negative = supply air cooled. null when air flow or temperatures are unknown; 0 with bypass open or supply fan off.
+        heating_kwh: { type: number }
+        cooling_kwh: { type: number }
+
+    FilterStatus:
+      type: object
+      required: [remaining_days, due]
+      properties:
+        remaining_days: { type: integer, minimum: 0, description: 'Fan running time left, rounded up.' }
+        due: { type: boolean }
+
+    LocalDateTime:
+      type: [string, 'null']
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$'
+      description: Local time without offset, e.g. 2026-10-16T23:41:02; null when unknown.
+
+    Status:
+      type: object
+      required: [uptime_s, time, control, schedule, holiday, temperatures, supply_fan, exhaust_fan, efficiency_pct,
+                 bypass, frost, heat_recovery, filter, operating_hours, faults]
+      properties:
+        uptime_s: { type: integer, minimum: 0 }
+        time: { $ref: '#/components/schemas/LocalDateTime' }
+        control: { $ref: '#/components/schemas/Control' }
+        schedule:
+          oneOf:
+            - { $ref: '#/components/schemas/ScheduleToday' }
+            - { type: 'null' }
+          description: Today in the weekly program; null while the clock is not set.
+        holiday:
+          oneOf:
+            - { $ref: '#/components/schemas/HolidayStatus' }
+            - { type: 'null' }
+          description: The holiday program; null unless today is between its dates.
+        temperatures: { $ref: '#/components/schemas/Temperatures' }
+        supply_fan: { $ref: '#/components/schemas/Fan' }
+        exhaust_fan: { $ref: '#/components/schemas/Fan' }
+        efficiency_pct: { type: [number, 'null'], description: Heat-recovery efficiency η. }
+        bypass: { $ref: '#/components/schemas/BypassStatus' }
+        frost: { $ref: '#/components/schemas/FrostStatus' }
+        heat_recovery: { $ref: '#/components/schemas/HeatRecovery' }
+        filter: { $ref: '#/components/schemas/FilterStatus' }
+        operating_hours: { type: integer, minimum: 0, description: Hours with at least one fan running. }
+        faults:
+          type: array
+          maxItems: 16
+          items: { $ref: '#/components/schemas/Fault' }
+
+    ScheduleToday:
+      type: object
+      description: Today in the active profile of the weekly program; it applies while the mode is auto.
+      required: [profile, today, next]
+      properties:
+        profile: { type: integer, minimum: 1, maximum: 5 }
+        today:
+          type: array
+          maxItems: 11
+          items: { $ref: '#/components/schemas/Slot' }
+          description: |
+            Today's switching points, sorted, starting at 00:00 when a level is carried over from
+            yesterday (or an earlier day: days without slots continue the last level); empty when the profile has no slots at all.
+        next:
+          oneOf:
+            - { $ref: '#/components/schemas/NextChange' }
+            - { type: 'null' }
+          description: The next switching point with a different level, today or tomorrow; null if the level doesn't change before the end of tomorrow.
+
+    NextChange:
+      type: object
+      required: [at, level, tomorrow]
+      properties:
+        at: { $ref: '#/components/schemas/TimeOfDay' }
+        level: { type: integer, minimum: 0, maximum: 4 }
+        tomorrow: { type: boolean, description: 'The change is tomorrow, not later today.' }
+
+    HolidayStatus:
+      type: object
+      required: [until, burst]
+      properties:
+        until: { $ref: '#/components/schemas/Date' }
+        burst: { type: boolean, description: A burst is running now; otherwise the fans rest until the next one. }
+
+    ActuatorType:
+      type: string
+      enum: [analog, motor, motor_reversed]
+      description: |
+        `analog`: stock type 1 (PE13 PWM 0/100 %). `motor`: type 2 (PD10 open, PD11 close).
+        `motor_reversed`: type 4.
+
+    BypassConfig:
+      type: object
+      required: [enabled, target_c, min_outdoor_c, close_if_outdoor_warmer, actuator, run_time_s, season, supply_offset_k]
+      properties:
+        enabled: { type: boolean }
+        target_c: { type: number, minimum: 10, maximum: 35, description: Room/extract target (stock v01035). }
+        min_outdoor_c: { type: number, minimum: 0, maximum: 30, description: Minimum outdoor temperature (stock v01036). }
+        close_if_outdoor_warmer:
+          type: boolean
+          description: Stock "mode 2" — close when outdoor air is more than 2 K warmer than extract air.
+        actuator: { $ref: '#/components/schemas/ActuatorType' }
+        run_time_s: { type: integer, minimum: 5, maximum: 600 }
+        season:
+          oneOf:
+            - { $ref: '#/components/schemas/Season' }
+            - { type: 'null' }
+          description: |
+            Months in which the bypass may open (stock "planning horizon"); null = all year. Outside
+            the window, or while the clock is not set, the bypass stays closed. Enabling cooling
+            requires removing the unit's rubber plug (condensate), as the stock UI warns.
+        supply_offset_k:
+          type: number
+          minimum: 0
+          maximum: 10
+          description: Stock "offset supply air temp." (v01037); stored, not yet used by the controller.
+
+    Season:
+      type: object
+      required: [start, end]
+      description: Inclusive; may wrap over New Year.
+      properties:
+        start: { $ref: '#/components/schemas/MonthDay' }
+        end: { $ref: '#/components/schemas/MonthDay' }
+
+    MonthDay:
+      type: string
+      pattern: '^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+      description: MM-DD, e.g. 03-01.
+
+    Date:
+      type: string
+      pattern: '^\d{4}-\d{2}-\d{2}$'
+      description: YYYY-MM-DD, 1970-2099.
+
+    TimeOfDay:
+      type: string
+      pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+      description: HH:MM.
+
+    FanConfig:
+      type: object
+      required: [supply_volts, extract_volts, airflow_m3h, m3h_per_krpm]
+      description: Stock on this unit 5.0/6.0/7.0/9.0 V for both fans. Below 1.65 V a fan is off.
+      properties:
+        supply_volts:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { type: number, minimum: 0, maximum: 10 }
+        extract_volts:
+          type: array
+          minItems: 4
+          maxItems: 4
+          items: { type: number, minimum: 0, maximum: 10 }
+        airflow_m3h:
+          type: array
+          minItems: 4
+          maxItems: 4
+          description: Measured supply air flow per level (e.g. from commissioning); 0 = estimate it from the fan speed.
+          items: { type: integer, minimum: 0, maximum: 1000 }
+        m3h_per_krpm:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Air flow per 1000 rpm for the speed-based estimate; 0 = no estimate. KWL EC 300 W default 118.
+
+    ProgramConfig:
+      type: object
+      required: [party_level, party_min, quiet_level, quiet_min]
+      description: Defaults for party/quiet. Stock on this unit 4 / 150 min and 0 / 180 min.
+      properties:
+        party_level: { type: integer, minimum: 0, maximum: 4 }
+        party_min: { type: integer, minimum: 5, maximum: 180 }
+        quiet_level: { type: integer, minimum: 0, maximum: 4 }
+        quiet_min: { type: integer, minimum: 5, maximum: 180 }
+
+    HolidayConfig:
+      type: object
+      required: [enabled, start, end, level, interval_h, active_min]
+      description: |
+        Between start and end (inclusive) the fans run at `level` for `active_min` every
+        `interval_h` hours and are off in between; frost protection stays active.
+        `active_min` must not exceed the interval.
+      properties:
+        enabled: { type: boolean }
+        start: { $ref: '#/components/schemas/Date' }
+        end: { $ref: '#/components/schemas/Date' }
+        level: { type: integer, minimum: 0, maximum: 4 }
+        interval_h: { type: integer, minimum: 1, maximum: 24 }
+        active_min: { type: integer, minimum: 5, maximum: 300 }
+
+    TimeConfig:
+      type: object
+      required: [ntp_enabled, ntp_server, utc_offset_min, eu_dst]
+      description: The RTC is synchronised by SNTP at boot and then hourly.
+      properties:
+        ntp_enabled: { type: boolean, description: Default true. }
+        ntp_server:
+          type: string
+          maxLength: 64
+          description: Empty = the router (DHCP gateway) if it answers NTP, else pool.ntp.org.
+        utc_offset_min: { type: integer, minimum: -720, maximum: 840, description: 'Standard time, CET = 60.' }
+        eu_dst: { type: boolean, description: EU summer time (last Sunday of March to last Sunday of October). }
+
+    FilterConfig:
+      type: object
+      required: [interval_months]
+      properties:
+        interval_months: { type: integer, minimum: 0, maximum: 24, description: 30-day months of fan running time; 0 disables. }
+
+    ScheduleConfig:
+      type: object
+      required: [active_profile, auto_at_midnight, auto_return_min, fallback_level]
+      properties:
+        active_profile: { type: integer, minimum: 1, maximum: 5, description: 'Stock Standard 1-3, User defined 1-2.' }
+        auto_at_midnight: { type: boolean, description: Return to auto every day at 00:00 (stock v02116). }
+        auto_return_min:
+          type: [integer, 'null']
+          minimum: 10
+          maximum: 1440
+          description: |
+            Return to auto this many minutes after the last manual change (level or mode); null = stay
+            in manual. A running party/quiet program is not cut short. Not in the stock firmware.
+        fallback_level: { type: integer, minimum: 0, maximum: 4, description: Auto-mode level while the clock is not set. }
+
+    Slot:
+      type: object
+      required: [from, level]
+      properties:
+        from: { $ref: '#/components/schemas/TimeOfDay' }
+        level: { type: integer, minimum: 0, maximum: 4 }
+
+    ScheduleProfile:
+      type: object
+      required: [days]
+      description: |
+        Monday … Sunday. A slot lasts until the next one; before a day's first slot the previous
+        day's last slot applies. Slots must be sorted by `from` without duplicates.
+      properties:
+        days:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items:
+            type: array
+            maxItems: 10
+            items: { $ref: '#/components/schemas/Slot' }
+
+    SetupStatus:
+      type: object
+      required: [setup_required, window_remaining_s]
+      properties:
+        setup_required: { type: boolean }
+        window_remaining_s: { type: [integer, 'null'], minimum: 0 }
+
+    SetupRequest:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string, minLength: 10, maxLength: 64 }
+
+    SetTimeRequest:
+      type: object
+      required: [unix_s]
+      properties:
+        unix_s: { type: integer, minimum: 1704067200, maximum: 4102444799, description: Seconds since 1970-01-01 UTC. }
+
+    FrostConfig:
+      type: object
+      required: [arm_below_c, entry_pct, hold_pct, exit_pct, boost_delay_s, defrost_s, test_run_s, exhaust_boost_v]
+      description: |
+        Stock values are −3.1, 58, 60, 60, 900, 10800, 900, 1.2. `hold_pct` must be ≥ `entry_pct`.
+        A defrost stops the supply fan while the exhaust fan keeps running (under-pressure in
+        the house), so its duration and the exhaust boost are limited to ranges around the stock values.
+      properties:
+        arm_below_c: { type: number, minimum: -25, maximum: 0 }
+        entry_pct: { type: number, minimum: 0, maximum: 100 }
+        hold_pct: { type: number, minimum: 0, maximum: 100 }
+        exit_pct: { type: number, minimum: 0, maximum: 100 }
+        boost_delay_s: { type: integer, minimum: 60, maximum: 3600 }
+        defrost_s: { type: integer, minimum: 600, maximum: 14400 }
+        test_run_s: { type: integer, minimum: 60, maximum: 3600 }
+        exhaust_boost_v: { type: number, minimum: 0, maximum: 2 }
+
+    Ipv4:
+      type: [string, 'null']
+      maxLength: 15
+      description: Dotted-quad IPv4 address.
+
+    NetworkConfig:
+      type: object
+      required: [dhcp, hostname, address, netmask, gateway, dns]
+      description: |
+        With `dhcp: false`, `address` and `netmask` are required, the netmask must be
+        contiguous and the gateway must lie in the subnet.
+      properties:
+        dhcp: { type: boolean }
+        hostname: { type: string, minLength: 1, maxLength: 32, pattern: '^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?$' }
+        address: { $ref: '#/components/schemas/Ipv4' }
+        netmask: { $ref: '#/components/schemas/Ipv4' }
+        gateway: { $ref: '#/components/schemas/Ipv4' }
+        dns: { $ref: '#/components/schemas/Ipv4' }
+
+    MqttConfig:
+      type: object
+      required: [enabled, host, port, username, password_set, client_id, base_topic, discovery, discovery_prefix]
+      properties:
+        enabled: { type: boolean }
+        host: { type: string, maxLength: 64 }
+        port: { type: integer, minimum: 1, maximum: 65535 }
+        username: { type: string, maxLength: 32 }
+        password_set: { type: boolean }
+        client_id: { type: string, maxLength: 23, pattern: '^[A-Za-z0-9_-]*$' }
+        base_topic: { type: string, maxLength: 48, description: 'State and command topics live below this (default openkwl; a multi-level topic such as home/kwl works too).' }
+        discovery: { type: boolean, description: Publish Home Assistant MQTT discovery messages. }
+        discovery_prefix: { type: string, maxLength: 48 }
+
+    MqttConfigUpdate:
+      type: object
+      required: [enabled, host, port, username, client_id, base_topic, discovery, discovery_prefix]
+      description: |
+        Fields are only validated when `enabled` is true. `password` omitted or null keeps
+        the stored password; `""` clears it. Topics must not contain `+`, `#`, empty levels
+        or a leading/trailing `/`.
+      properties:
+        enabled: { type: boolean }
+        host: { type: string, maxLength: 64 }
+        port: { type: integer, minimum: 1, maximum: 65535 }
+        username: { type: string, maxLength: 32 }
+        password: { type: [string, 'null'], maxLength: 64 }
+        client_id: { type: string, minLength: 1, maxLength: 23, pattern: '^[A-Za-z0-9_-]+$' }
+        base_topic: { type: string, minLength: 1, maxLength: 48 }
+        discovery: { type: boolean }
+        discovery_prefix: { type: string, minLength: 1, maxLength: 48 }
+
+    ResetReason:
+      type: string
+      enum: [power_on, pin, software, watchdog, brownout, unknown]
+
+    SystemInfo:
+      type: object
+      required: [firmware_version, build, mcu, mac, ip, uptime_s, reset_reason, sd_card, mqtt_connected, last_time_sync, device]
+      properties:
+        firmware_version: { type: string, maxLength: 16 }
+        build: { type: string, maxLength: 40 }
+        mcu: { type: string, maxLength: 24 }
+        mac: { type: string, pattern: '^([0-9a-f]{2}:){5}[0-9a-f]{2}$' }
+        ip: { $ref: '#/components/schemas/Ipv4' }
+        uptime_s: { type: integer, minimum: 0 }
+        reset_reason: { $ref: '#/components/schemas/ResetReason' }
+        sd_card: { type: boolean }
+        mqtt_connected: { type: boolean }
+        last_time_sync: { $ref: '#/components/schemas/LocalDateTime' }
+        device: { $ref: '#/components/schemas/DeviceIdentity' }
+
+    SystemDetails:
+      type: object
+      description: Everything the firmware knows about itself and its surroundings.
+      required: [firmware, chip, memory, network, time, mqtt, storage, stock, counters, board, modules]
+      properties:
+        firmware: { $ref: '#/components/schemas/FirmwareDetails' }
+        chip: { $ref: '#/components/schemas/ChipDetails' }
+        memory: { $ref: '#/components/schemas/MemoryDetails' }
+        network: { $ref: '#/components/schemas/NetworkDetails' }
+        time: { $ref: '#/components/schemas/TimeDetails' }
+        mqtt: { $ref: '#/components/schemas/MqttDetails' }
+        storage: { $ref: '#/components/schemas/StorageDetails' }
+        stock: { $ref: '#/components/schemas/StockDetails' }
+        counters: { $ref: '#/components/schemas/Counters' }
+        board: { $ref: '#/components/schemas/BoardDetails' }
+        modules: { $ref: '#/components/schemas/ModuleDetails' }
+
+    ModuleDetails:
+      type: object
+      description: Extension modules on the RS-485 module bus.
+      required: [bus_power, knx, knx_firmware, knx_frames, knx_errors, knx_timeouts]
+      properties:
+        bus_power:
+          type: string
+          enum: [off, starting, on, overcurrent]
+          description: Supply of the module bus (+24 V on the RJ-10 socket); `overcurrent` = switched off (stock Fehler 05).
+        knx:
+          type: string
+          enum: [searching, connected, not_found]
+          description: The KWL-KNX module; `not_found` is still asked every 10 s.
+        knx_firmware: { type: [string, 'null'], maxLength: 12, description: 'Firmware version the module reports, e.g. "1.20".' }
+        knx_frames: { type: integer, minimum: 0, description: Answers received since boot. }
+        knx_errors: { type: integer, minimum: 0, description: 'Answers with a wrong checksum, address or length, and error replies.' }
+        knx_timeouts: { type: integer, minimum: 0, description: Polls without an answer. }
+
+    BoardDetails:
+      type: object
+      description: Raw board readings for bring-up, so the pin assumptions can be confirmed on the unit.
+      required: [card_detect_present, sd_power_active_low, mains_pulses_per_s, phy_address]
+      properties:
+        card_detect_present: { type: [boolean, 'null'], description: 'Card-detect pin (PH13) said "present" at boot.' }
+        sd_power_active_low: { type: [boolean, 'null'], description: The SD card switched on with PA15 low (stock) rather than high. }
+        mains_pulses_per_s: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Zero-cross pulses per second on PB3 (50/100 on mains, 0 on a bench supply).' }
+        phy_address: { type: [integer, 'null'], minimum: 0, maximum: 31, description: Management address of the Ethernet PHY found by the scan. }
+
+    FirmwareDetails:
+      type: object
+      required: [version, build, platform, target, rustc, profile, built_unix_s, uptime_s]
+      properties:
+        version: { type: string, maxLength: 16 }
+        build: { type: string, maxLength: 40 }
+        platform: { type: string, maxLength: 16, description: '"stm32f2" on the unit, "simulator" on a computer.' }
+        target: { type: string, maxLength: 24, description: Rust target triple. }
+        rustc: { type: string, maxLength: 24 }
+        profile: { type: string, maxLength: 8 }
+        built_unix_s: { type: [integer, 'null'], minimum: 0, description: Build time (UTC). }
+        uptime_s: { type: integer, minimum: 0 }
+
+    ChipDetails:
+      type: object
+      required: [mcu, device_id, revision_id, unique_id, flash_kb, sysclk_hz, hse_hz, reset_reason, reset_flags]
+      properties:
+        mcu: { type: string, maxLength: 24 }
+        device_id: { type: integer, minimum: 0, maximum: 65535, description: 'DBGMCU_IDCODE.DEV_ID (0x411 = STM32F2); 0 when unknown.' }
+        revision_id: { type: integer, minimum: 0, maximum: 65535, description: DBGMCU_IDCODE.REV_ID. }
+        unique_id: { type: string, maxLength: 24, description: 96-bit unique device ID as hex. }
+        flash_kb: { type: integer, minimum: 0, maximum: 65535 }
+        sysclk_hz: { type: integer, minimum: 0 }
+        hse_hz: { type: [integer, 'null'], minimum: 0, description: External crystal; null when running from the internal oscillator. }
+        reset_reason: { $ref: '#/components/schemas/ResetReason' }
+        reset_flags: { type: integer, minimum: 0, maximum: 255, description: 'RCC_CSR bits 24–31.' }
+
+    MemoryDetails:
+      type: object
+      required: [flash_slot_bytes, image_bytes, ram_bytes, static_ram_bytes, stack_bytes, stack_peak_bytes]
+      properties:
+        flash_slot_bytes: { type: integer, minimum: 0, description: Application slot behind the stock bootloader. }
+        image_bytes: { type: integer, minimum: 0 }
+        ram_bytes: { type: integer, minimum: 0 }
+        static_ram_bytes: { type: integer, minimum: 0, description: .data + .bss }
+        stack_bytes: { type: integer, minimum: 0 }
+        stack_peak_bytes: { type: [integer, 'null'], minimum: 0 }
+
+    NetworkDetails:
+      type: object
+      required: [link_up, dhcp, hostname, mac, ip, prefix_len, gateway, dns, ntp_server, mdns, phy]
+      properties:
+        link_up: { type: boolean }
+        dhcp: { type: boolean }
+        hostname: { type: string, maxLength: 32 }
+        mac: { type: string, maxLength: 17 }
+        ip: { $ref: '#/components/schemas/Ipv4' }
+        prefix_len: { type: [integer, 'null'], minimum: 0, maximum: 32 }
+        gateway: { $ref: '#/components/schemas/Ipv4' }
+        dns: { type: array, maxItems: 3, items: { type: string, maxLength: 15 } }
+        ntp_server: { $ref: '#/components/schemas/Ipv4', description: 'Time server announced by DHCP (option 42); always null on the unit, whose DHCP client does not pass the option on.' }
+        mdns: { type: boolean }
+        phy: { type: string, maxLength: 16, description: 'Ethernet PHY as detected, e.g. "LAN8720".' }
+
+    TimeSource:
+      type: string
+      enum: [none, rtc, manual, sntp]
+
+    TimeDetails:
+      type: object
+      required: [source, server, last_sync, last_offset_ms, syncs, rtc_clock]
+      properties:
+        source: { $ref: '#/components/schemas/TimeSource' }
+        server: { type: string, maxLength: 64, description: Time server of the last attempt; empty if none. }
+        last_sync: { $ref: '#/components/schemas/LocalDateTime' }
+        last_offset_ms: { type: [integer, 'null'], description: Correction applied by the last sync. }
+        syncs: { type: integer, minimum: 0 }
+        rtc_clock: { type: string, maxLength: 8, description: 'LSE (32 kHz crystal), LSI or host.' }
+
+    MqttDetails:
+      type: object
+      required: [enabled, connected, broker, connects, published, received]
+      properties:
+        enabled: { type: boolean }
+        connected: { type: boolean }
+        broker: { type: string, maxLength: 64 }
+        connects: { type: integer, minimum: 0 }
+        published: { type: integer, minimum: 0 }
+        received: { type: integer, minimum: 0 }
+
+    StorageDetails:
+      type: object
+      required: [present, capacity_mb, writes, last_state_save, config_valid]
+      properties:
+        present: { type: boolean }
+        capacity_mb: { type: [integer, 'null'], minimum: 0 }
+        writes: { type: integer, minimum: 0, description: Files written since boot. }
+        last_state_save: { $ref: '#/components/schemas/LocalDateTime' }
+        config_valid: { type: boolean }
+
+    StockDetails:
+      type: object
+      required: [bootloader, fw_basis]
+      properties:
+        bootloader: { type: string, maxLength: 16 }
+        fw_basis: { type: string, maxLength: 16, description: FwBasis in settings.ini. }
+
+    Counters:
+      type: object
+      required: [http_requests, http_errors, failed_logins, sessions]
+      properties:
+        http_requests: { type: integer, minimum: 0 }
+        http_errors: { type: integer, minimum: 0 }
+        failed_logins: { type: integer, minimum: 0 }
+        sessions: { type: integer, minimum: 0, maximum: 255 }
+
+    DeviceIdentity:
+      type: object
+      description: |
+        Factory identity, as on the stock "Device data" page (tinfo.htm). Read-only, taken over
+        from the stock settings by the import; empty strings when unknown.
+      required: [model, article, serial, production_code, security_code]
+      properties:
+        model: { type: string, maxLength: 24, description: 'Stock v00000, e.g. "KWL EC 300W R".' }
+        article: { type: string, maxLength: 16, description: 'Stock v00001 "Ref. no." (parameter file), e.g. "04232001.hGP".' }
+        serial: { type: string, maxLength: 12, description: Stock v00303. }
+        production_code: { type: string, maxLength: 12, description: Stock v00304. }
+        security_code: { type: string, maxLength: 12, description: 'Stock v00343, Helios portal pairing code; not used by this firmware.' }

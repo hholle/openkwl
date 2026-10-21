@@ -1,0 +1,454 @@
+diff -ruN a/Cargo.toml b/Cargo.toml
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -49,13 +49,13 @@
+ features = ["serde"]
+ optional = true
+ 
+-[dependencies.ryu]
+-version = "1.0.5"
+-
+ [dependencies.serde]
+ version = "1.0.100"
+ features = ["derive"]
+ default-features = false
++
++[dev-dependencies.ryu]
++version = "1.0.5"
+ 
+ [dev-dependencies.serde_derive]
+ version = "1.0.100"
+diff -ruN a/src/de/mod.rs b/src/de/mod.rs
+--- a/src/de/mod.rs
++++ b/src/de/mod.rs
+@@ -1,6 +1,5 @@
+ //! Deserialize JSON data to a Rust data structure
+ 
+-use core::str::FromStr;
+ use core::{fmt, str};
+ 
+ use serde::de::{self, Visitor};
+@@ -373,7 +372,8 @@
+                 // caller has guaranteed that `pattern` contains only ascii characters.
+                 let s = unsafe { str::from_utf8_unchecked(&$self.slice[start..$self.index]) };
+ 
+-                let v = $typ::from_str(s).or(Err(Error::InvalidNumber))?;
++                // openKWL patch: see src/float.rs.
++                let v = crate::float::parse(s).ok_or(Error::InvalidNumber)? as $typ;
+ 
+                 $visitor.$visit_fn(v)
+             }
+diff -ruN a/src/float.rs b/src/float.rs
+--- a/src/float.rs
++++ b/src/float.rs
+@@ -0,0 +1,364 @@
++//! openKWL patch: a small decimal parser replacing `core`'s `f32/f64::from_str` for JSON
++//! numbers, which would add ~13 KB (the Eisel–Lemire table) to the firmware. Same code as
++//! `openkwl_core::num::parse_f32` (tested there against `core`); exact for up to 15
++//! significant digits and decimal exponents within ±22, which covers every number the
++//! openKWL API exchanges. See `vendor/README.md`.
++//!
++//! Also a small float writer ([`format_f32`]) replacing `ryu` (~3.3 KB of flash), with the
++//! same output: the shortest decimal that reads back as the same `f32`, in ryu's layout.
++
++/// Exact powers of ten in `f64` (10^0 … 10^22).
++const POW10: [f64; 23] = [
++    1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18, 1e19,
++    1e20, 1e21, 1e22,
++];
++
++fn scale(mut v: f64, mut exp: i32) -> f64 {
++    while exp > 22 {
++        v *= 1e22;
++        exp -= 22;
++    }
++    while exp < -22 {
++        v /= 1e22;
++        exp += 22;
++    }
++    if exp >= 0 { v * POW10[exp as usize] } else { v / POW10[(-exp) as usize] }
++}
++
++/// Parses `[+-]digits[.digits][(e|E)[+-]digits]` like `str::parse::<f64>` does (also `inf`,
++/// `nan`, `.5`, `5.`); `None` for anything else, including empty input.
++pub fn parse(s: &str) -> Option<f64> {
++    let b = s.as_bytes();
++    let (neg, mut i) = match b.first()? {
++        b'-' => (true, 1),
++        b'+' => (false, 1),
++        _ => (false, 0),
++    };
++    let rest = &s[i..];
++    if rest.eq_ignore_ascii_case("inf") || rest.eq_ignore_ascii_case("infinity") {
++        return Some(if neg { f64::NEG_INFINITY } else { f64::INFINITY });
++    }
++    if rest.eq_ignore_ascii_case("nan") {
++        return Some(f64::NAN);
++    }
++
++    let mut mantissa: u64 = 0;
++    let mut exp: i32 = 0;
++    let mut seen_digit = false;
++    let mut in_fraction = false;
++    while i < b.len() {
++        match b[i] {
++            c @ b'0'..=b'9' => {
++                seen_digit = true;
++                if mantissa < 100_000_000_000_000_000 {
++                    mantissa = mantissa * 10 + u64::from(c - b'0');
++                    if in_fraction {
++                        exp -= 1;
++                    }
++                } else if !in_fraction {
++                    exp += 1; // digits beyond u64 precision still count in the integer part
++                }
++            }
++            b'.' if !in_fraction => in_fraction = true,
++            b'e' | b'E' => break,
++            _ => return None,
++        }
++        i += 1;
++    }
++    if !seen_digit {
++        return None;
++    }
++    if i < b.len() {
++        // Exponent.
++        i += 1;
++        let (eneg, start) = match b.get(i)? {
++            b'-' => (true, i + 1),
++            b'+' => (false, i + 1),
++            _ => (false, i),
++        };
++        let e = &s[start..];
++        if e.is_empty() || !e.bytes().all(|c| c.is_ascii_digit()) {
++            return None;
++        }
++        let e: i32 = e.parse::<u16>().map_or(10_000, i32::from);
++        exp += if eneg { -e } else { e };
++    }
++    let v = scale(mantissa as f64, exp.clamp(-400, 400));
++    Some(if neg { -v } else { v })
++}
++
++/// Buffer size for [`format_f32`] (the longest output, `-0.00000` and 9 digits, is 17 bytes).
++pub(crate) const F32_MAX_LEN: usize = 24;
++
++type Big = [u32; 6];
++
++fn mul_small(d: &mut Big, m: u32) {
++    let mut carry = 0;
++    for x in d.iter_mut() {
++        let p = u64::from(*x) * u64::from(m) + carry;
++        *x = p as u32;
++        carry = p >> 32;
++    }
++}
++
++/// `v · 5^p5 · 2^p2` as a 192-bit integer (enough for every comparison below).
++fn big(v: u64, p5: i32, p2: i32) -> Big {
++    let mut d = [v as u32, (v >> 32) as u32, 0, 0, 0, 0];
++    for (base, chunk, mut n) in [(5u32, 13, p5), (2, 31, p2)] {
++        while n > 0 {
++            let s = n.min(chunk);
++            mul_small(&mut d, base.pow(s as u32));
++            n -= s;
++        }
++    }
++    d
++}
++
++/// Compares `a · 10^k` with `b · 2^c` exactly.
++fn cmp(a: u64, k: i32, b: u64, c: i32) -> core::cmp::Ordering {
++    let s = k.min(c);
++    let l = big(a, k, k - s);
++    let r = big(b, -k, c - s);
++    l.iter().rev().cmp(r.iter().rev())
++}
++
++/// The shortest decimal `d·10^k` that reads back as `a` (finite, > 0); among equally short
++/// ones the closest to `a` (ties to even), like ryu. For n = 1, 2, … significant digits it
++/// takes the two n-digit neighbours of `a` (the nearer first) and keeps the first one inside
++/// `a`'s rounding interval. Digits, interval and nearness come from exact integer comparisons
++/// (`cmp`), so no tables are needed; it is slower than ryu (some 100 comparisons for 9 digits).
++/// Compared with ryu for every `f32` in the tests below.
++fn shortest(a: f32) -> (u32, i32) {
++    use core::cmp::Ordering::{Greater, Less};
++    let bits = a.to_bits();
++    let (field, frac) = ((bits >> 23) as i32, u64::from(bits & 0x7f_ffff));
++    // a = m · 2^(c+2); the interval is [lo, hi] · 2^c, bounds included if m is even.
++    let (m, c) = if field == 0 { (frac, -151) } else { (frac | 0x80_0000, field - 152) };
++    let (lo, hi) = (4 * m - if frac == 0 && field > 1 { 1 } else { 2 }, 4 * m + 2);
++    let even = m % 2 == 0;
++    let inside = |d: u64, k: i32| {
++        let (l, h) = (cmp(d, k, lo, c), cmp(d, k, hi, c));
++        (l == Greater || (even && l != Less)) && (h == Less || (even && h != Greater))
++    };
++
++    // floor(floor(log2 a) · log10 2) is the decimal exponent of a or one less.
++    let e2 = 63 - m.leading_zeros() as i32 + c + 2;
++    let mut k = ((e2 * 1233) >> 12) + 2; // a < 10^k
++    let last = k - 11;
++    let mut f = 0; // floor(a / 10^k)
++    loop {
++        f *= 10;
++        while cmp(f + 1, k, 4 * m, c) != Greater {
++            f += 1;
++        }
++        // The nearer neighbour first; exact ties to even, like ryu.
++        let up = match cmp(2 * f + 1, k, 8 * m, c) {
++            Less => true,
++            Greater => false,
++            _ => f % 2 == 1,
++        };
++        let (near, far) = if up { (f + 1, f) } else { (f, f + 1) };
++        for d in [near, far] {
++            if d != 0 && inside(d, k) {
++                return (d as u32, k);
++            }
++        }
++        if k == last {
++            return (near as u32, k); // 9 digits always suffice; not reached
++        }
++        k -= 1;
++    }
++}
++
++/// Writes finite `v` like `ryu::Buffer::format_finite`: `1.0`, `-8.25`, `0.001`, `1e-7`,
++/// `1.2345679e-12`, `1e16`; returns the length.
++pub(crate) fn format_f32(v: f32, out: &mut [u8; F32_MAX_LEN]) -> usize {
++    let mut n = 0;
++    let mut push = |b: u8| {
++        out[n] = b;
++        n += 1;
++    };
++    if v.is_sign_negative() {
++        push(b'-');
++    }
++    let (mut d, mut k) = if v.to_bits() << 1 == 0 { (0, 0) } else { shortest(v.abs()) };
++    while d != 0 && d % 10 == 0 {
++        d /= 10;
++        k += 1;
++    }
++    // digits[i] is the digit for 10^(k+i).
++    let mut digits = [0u8; 10];
++    let mut len = 0;
++    while d > 0 {
++        digits[len] = b'0' + (d % 10) as u8;
++        d /= 10;
++        len += 1;
++    }
++    // 10^(kk-1) <= |v| < 10^kk. ryu's layout: plain decimal for 1e-6 < |v| < 1e13 (and 0),
++    // else d.ddde±x.
++    let kk = len as i32 + k;
++    let exp = if (-5..=13).contains(&kk) { 0 } else { kk - 1 };
++    let (k, kk) = (k - exp, kk - exp);
++    let last = if exp == 0 { k.min(-1) } else { k };
++    let mut p = (kk - 1).max(0);
++    while p >= last {
++        push(if p >= k && p < kk { digits[(p - k) as usize] } else { b'0' });
++        if p == 0 && p > last {
++            push(b'.');
++        }
++        p -= 1;
++    }
++    if exp != 0 {
++        push(b'e');
++        let mut e = exp;
++        if e < 0 {
++            push(b'-');
++            e = -e;
++        }
++        if e >= 10 {
++            push(b'0' + (e / 10) as u8);
++        }
++        push(b'0' + (e % 10) as u8);
++    }
++    n
++}
++
++#[cfg(test)]
++mod tests {
++    extern crate std;
++
++    use super::{format_f32, F32_MAX_LEN};
++
++    fn ours(v: f32) -> std::string::String {
++        let mut buf = [0; F32_MAX_LEN];
++        let len = format_f32(v, &mut buf);
++        std::string::String::from(core::str::from_utf8(&buf[..len]).unwrap())
++    }
++
++    /// Our output equals ryu's and reads back exactly (with `core` and with our parser).
++    fn check(v: f32) {
++        if !v.is_finite() {
++            return;
++        }
++        let s = ours(v);
++        assert_eq!(s, ryu::Buffer::new().format_finite(v), "bits {:#010x}", v.to_bits());
++        assert_eq!(s.parse::<f32>().unwrap().to_bits(), v.to_bits(), "{s}");
++        assert_eq!((super::parse(&s).unwrap() as f32).to_bits(), v.to_bits(), "{s}");
++    }
++
++    #[test]
++    fn edge_cases() {
++        for (v, s) in [
++            (0.0, "0.0"),
++            (-0.0, "-0.0"),
++            (1.0, "1.0"),
++            (21.0, "21.0"),
++            (-8.25, "-8.25"),
++            (75.26881, "75.26881"),
++            (0.1, "0.1"),
++            (0.3, "0.3"),
++            (1.2345679e-12, "1.2345679e-12"),
++            (1e-5, "0.00001"),
++            (1e-6, "0.000001"),
++            (-1.2345678e-6, "-0.0000012345678"),
++            (1e-7, "1e-7"),
++            (0.00012345, "0.00012345"),
++            (1234567.0, "1234567.0"),
++            (16777216.0, "16777216.0"),
++            (1e13, "1e13"),
++            (9999999999999.0, "1e13"),
++            (1e12, "1000000000000.0"),
++            (f32::MAX, "3.4028235e38"),
++            (f32::MIN, "-3.4028235e38"),
++            (f32::MIN_POSITIVE, "1.1754944e-38"),
++            (f32::EPSILON, "1.1920929e-7"),
++            (f32::from_bits(1), "1e-45"),
++            (f32::from_bits(0x007f_ffff), "1.1754942e-38"),
++        ] {
++            assert_eq!(ours(v), s);
++            check(v);
++        }
++        for bits in (0..=255u32).flat_map(|e| [0, 1, 2, 0x40_0000, 0x7f_fffe, 0x7f_ffff].map(|m| e << 23 | m)) {
++            check(f32::from_bits(bits));
++            check(-f32::from_bits(bits));
++        }
++    }
++
++    #[test]
++    fn integers_and_powers_of_ten() {
++        for i in -100_000..=100_000 {
++            check(i as f32);
++        }
++        for i in (0..=u32::MAX).step_by(65_537) {
++            check(i as f32);
++        }
++        for e in -45..=38 {
++            check(std::format!("1e{e}").parse().unwrap());
++            check(std::format!("9.999999e{e}").parse().unwrap());
++        }
++        for i in 0..=100_000 {
++            check(i as f32 / 100.0);
++            check(i as f32 / 1000.0);
++        }
++    }
++
++    #[test]
++    fn subnormals() {
++        for bits in 1..=100_000u32 {
++            check(f32::from_bits(bits));
++        }
++        for bits in (0..0x80_0000u32).step_by(97) {
++            check(f32::from_bits(bits));
++        }
++    }
++
++    #[test]
++    fn random_bit_patterns() {
++        let mut x = 0x2545_f491_4f6c_dd1du64;
++        for _ in 0..100_000 {
++            x ^= x << 13;
++            x ^= x >> 7;
++            x ^= x << 17;
++            check(f32::from_bits(x as u32));
++        }
++    }
++
++    /// Every `f32`: `cargo test -p serde-json-core --release -- --ignored` (about a minute).
++    #[test]
++    #[ignore]
++    fn all_f32_match_ryu() {
++        let threads = std::thread::available_parallelism().map_or(8, |n| n.get()) as u32;
++        let handles: std::vec::Vec<_> = (0..threads)
++            .map(|t| {
++                std::thread::spawn(move || {
++                    let mut buf = [0; F32_MAX_LEN];
++                    let mut ryu = ryu::Buffer::new();
++                    let mut bad = 0u32;
++                    let mut bits = t;
++                    loop {
++                        let v = f32::from_bits(bits);
++                        if v.is_finite() {
++                            let len = format_f32(v, &mut buf);
++                            if &buf[..len] != ryu.format_finite(v).as_bytes() {
++                                if bad < 20 {
++                                    std::println!(
++                                        "{bits:#010x}: {} vs {}",
++                                        core::str::from_utf8(&buf[..len]).unwrap(),
++                                        ryu.format_finite(v)
++                                    );
++                                }
++                                bad += 1;
++                            }
++                        }
++                        match bits.checked_add(threads) {
++                            Some(b) => bits = b,
++                            None => break bad,
++                        }
++                    }
++                })
++            })
++            .collect();
++        let bad: u32 = handles.into_iter().map(|h| h.join().unwrap()).sum();
++        assert_eq!(bad, 0);
++    }
++}
+diff -ruN a/src/lib.rs b/src/lib.rs
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -80,6 +80,10 @@
+ #![cfg_attr(not(feature = "std"), no_std)]
+ 
+ pub mod de;
++mod float;
++/// The crate's small float parser (also for non-JSON text such as INI files), see
++/// `vendor/README.md`; `as f32` gives the correctly rounded `f32`.
++pub use float::parse as parse_float;
+ pub mod ser;
+ pub mod str;
+ 
+diff -ruN a/src/ser/mod.rs b/src/ser/mod.rs
+--- a/src/ser/mod.rs
++++ b/src/ser/mod.rs
+@@ -220,11 +220,14 @@
+     }};
+ }
+ 
++// openKWL patch: `crate::float::format_f32` instead of `ryu` (same output, ~3.3 KB less
++// flash, see vendor/README.md). `f64` goes through `f32`: exact for every `f64` that is an
++// `f32`, rounded to `f32` precision otherwise (openKWL serialises no `f64`).
+ macro_rules! serialize_ryu {
+     ($self:ident, $v:expr) => {{
+-        let mut buffer = ryu::Buffer::new();
+-        let printed = buffer.format($v);
+-        $self.extend_from_slice(printed.as_bytes())
++        let mut buffer = [0; crate::float::F32_MAX_LEN];
++        let len = crate::float::format_f32($v, &mut buffer);
++        $self.extend_from_slice(&buffer[..len])
+     }};
+ }
+ 
+@@ -310,8 +313,8 @@
+     }
+ 
+     fn serialize_f64(self, v: f64) -> Result<Self::Ok> {
+-        if v.is_finite() {
+-            serialize_ryu!(self, v)
++        if (v as f32).is_finite() {
++            serialize_ryu!(self, v as f32)
+         } else {
+             self.serialize_none()
+         }

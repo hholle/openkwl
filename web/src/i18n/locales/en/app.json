@@ -1,0 +1,31 @@
+{
+  "nav": {
+    "overview": "Overview",
+    "schedule": "Schedule",
+    "settings": "Settings",
+    "pages": "Pages",
+    "attention": "{{page}} needs your attention"
+  },
+  "title": {
+    "login": "Log in",
+    "setup": "Set up"
+  },
+  "login": {
+    "title": "Log in",
+    "password": "Password",
+    "enterPassword": "Enter the password",
+    "remember": "Keep me logged in on this device",
+    "rememberHint": "Until you log out or the unit restarts. Use it on your own devices only.",
+    "tryAgainIn": "Try again in {{s}} s",
+    "submit": "Log in",
+    "wrong": "Wrong password",
+    "limited": "Too many attempts",
+    "unreachable": "Can't reach the unit. Check that it's on, then reload this page."
+  },
+  "language": {
+    "title": "Language",
+    "intro": "The language of this page on this device. Home Assistant keeps its own names.",
+    "label": "Language",
+    "auto": "Automatic ({{name}})"
+  }
+}

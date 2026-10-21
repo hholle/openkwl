@@ -1,0 +1,43 @@
+{
+  "steps": {
+    "password": "Passwort",
+    "check": "Einstellungen prüfen",
+    "done": "Fertig"
+  },
+  "stepOf": "Schritt {{n}} von {{total}} · {{name}}",
+  "closesIn": "Einrichtung endet in {{min}} min",
+  "closed": {
+    "title": "Die Einrichtung ist beendet",
+    "text": "Aus Sicherheitsgründen ist die Einrichtung nur 30 Minuten nach dem Einschalten des Geräts möglich. Schalte das Gerät aus und wieder ein und lade dann diese Seite neu.",
+    "reload": "Seite neu laden"
+  },
+  "ready": {
+    "title": "Das Gerät ist bereit",
+    "text": "Den Zeitplan und alle Einstellungen kannst du jederzeit ändern.",
+    "overview": "Übersicht öffnen",
+    "homeAssistant": "Home Assistant verbinden"
+  },
+  "password": {
+    "title": "Passwort festlegen",
+    "intro": "Damit öffnest du diese Seite. Es gibt kein Zurücksetzen des Passworts; wenn du es vergisst, brauchst du die SD-Karte.",
+    "new": "Neues Passwort",
+    "minLength": "Mindestens {{n}} Zeichen.",
+    "repeat": "Passwort wiederholen",
+    "mismatch": "Die Passwörter stimmen nicht überein.",
+    "continue": "Weiter"
+  },
+  "review": {
+    "title": "Einstellungen prüfen",
+    "takenOver": "Diese Einstellungen wurden von der Original-Steuerung übernommen.",
+    "defaults": "Von der Original-Steuerung wurden keine Einstellungen gefunden, daher sind das die Standardwerte.",
+    "unit": "Gerät",
+    "network": "Netzwerk",
+    "automatic": "automatisch",
+    "fanVoltage": "Ventilatorspannung, Stufe {{n}}",
+    "schedule": "Wochenprogramm",
+    "later": "Alles lässt sich später unter Zeitplan und Einstellungen ändern.",
+    "back": "Zurück",
+    "confirm": "Das passt so"
+  },
+  "wrongHost": "Öffne die Einrichtung über die Adresse oder den Namen des Geräts (zum Beispiel http://openkwl.local/ oder seine IP-Adresse), nicht über eine andere Webadresse."
+}

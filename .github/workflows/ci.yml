@@ -1,0 +1,90 @@
+# Checks for every push and pull request: the same commands as docs/DEVELOPMENT.md, with the
+# toolchain pinned in mise.toml.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust crates (tests, lint, no_std)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: Swatinem/rust-cache@v2
+      - name: Patched serde-json-core
+        run: scripts/vendor.sh
+      - name: Format
+        run: cargo fmt --check
+      - name: Tests
+        run: cargo test --workspace
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: no_std builds
+        run: |
+          for c in openkwl-core openkwl-api openkwl-auth openkwl-config openkwl-ha openkwl-bus openkwl-update openkwl-app; do
+            cargo build -p "$c" --target thumbv7m-none-eabi
+          done
+
+  firmware:
+    name: Firmware (three variants, flash budget)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: firmware
+      - name: Patched serde-json-core
+        run: scripts/vendor.sh
+      - name: Format
+        working-directory: firmware
+        run: cargo fmt --check
+      - name: Build and lint
+        # The linker refuses an image that doesn't fit the stock slot (memory.x).
+        working-directory: firmware
+        run: |
+          cargo clippy --release -- -D warnings
+          cargo clippy --release --no-default-features --features sd-log -- -D warnings
+          cargo clippy --release --no-default-features --features rtt -- -D warnings
+          cargo build --release
+          DEFMT_LOG=info cargo build --release --no-default-features --features sd-log
+          cargo build --release --no-default-features --features rtt
+      - name: Flash use (normal build)
+        working-directory: firmware
+        run: |
+          cargo build --release
+          llvm="$(ls -d "$(rustc --print sysroot)"/lib/rustlib/*/bin | head -1)"
+          "$llvm/llvm-size" -A target/thumbv7m-none-eabi/release/openkwl-fw \
+            | awk '/^\.(vector_table|text|rodata|data) /{s+=$2} END {printf "Flash: %d of 228864 bytes, %d free\n", s, 228864-s; if (s > 228864) exit 1}' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+  web:
+    name: Web UI and API contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - name: Install
+        working-directory: web
+        run: pnpm install --frozen-lockfile
+      - name: Type check
+        working-directory: web
+        run: npx tsc -p . --noEmit
+      - name: Tests
+        working-directory: web
+        run: pnpm test
+      - name: Build (as on the SD card)
+        working-directory: web
+        run: pnpm package:sd
+      - name: OpenAPI lint
+        run: pnpm --package=@redocly/cli@latest dlx redocly lint api/openapi.yaml

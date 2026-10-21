@@ -1,0 +1,145 @@
+/* AirflowSchematic (KWL): two counterflow lanes, the exchanger between them, the bypass arc.
+   Geometry lives in AirflowSchematic.tsx (viewBox 0 0 240 136); colours are theme tokens. */
+
+.kwl-af {
+  --af-border-strong: var(--mantine-color-gray-4);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: stretch;
+}
+[data-mantine-color-scheme='dark'] .kwl-af {
+  --af-border-strong: var(--mantine-color-dark-4);
+}
+.kwl-af[data-size='phone'] {
+  column-gap: 6px;
+}
+
+.kwl-af-side {
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
+  color: var(--mantine-color-placeholder);
+  padding-bottom: 2px;
+}
+.kwl-af-side[data-side='l'] { text-align: right; }
+
+.kwl-af-col { position: relative; }
+.kwl-af-port {
+  position: absolute;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+}
+.kwl-af-port[data-lane='top'] { top: 26.47%; }
+.kwl-af-port[data-lane='bot'] { top: 73.53%; }
+.kwl-af-col[data-side='l'] .kwl-af-port { align-items: flex-end; text-align: right; }
+.kwl-af-col[data-side='r'] .kwl-af-port { align-items: flex-start; text-align: left; }
+
+.kwl-af-name {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--mantine-color-dimmed);
+  white-space: nowrap;
+}
+.kwl-af-dir {
+  color: var(--mantine-color-placeholder);
+  font-weight: 400;
+  margin-left: 4px;
+}
+.kwl-af .kwl-display { white-space: nowrap; }
+.kwl-af[data-offline] .kwl-display { color: var(--mantine-color-placeholder); }
+
+.kwl-af-mid { position: relative; }
+.kwl-af-svg { display: block; width: 260px; height: auto; overflow: visible; }
+
+.kwl-af-ctr {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+.kwl-af-ctr-in {
+  background: var(--mantine-color-body);
+  border-radius: 6px;
+  padding: 3px 4px;
+  max-width: 64px;
+}
+.kwl-af-ctr b {
+  display: block;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.kwl-af-ctr span {
+  display: block;
+  font-size: 10px;
+  line-height: 12px;
+  color: var(--mantine-color-dimmed);
+}
+
+/* SVG parts */
+.kwl-af-ln { fill: none; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+.kwl-af-cold { stroke: var(--app-air-cold); }
+.kwl-af-warm { stroke: var(--app-air-warm); }
+.kwl-af-cold-f { fill: var(--app-air-cold); }
+.kwl-af-warm-f { fill: var(--app-air-warm); }
+.kwl-af-moving { stroke-dasharray: 9 6; }
+.kwl-af-hx { fill: var(--mantine-color-body); stroke: var(--af-border-strong); stroke-width: 1.5; }
+.kwl-af-hx[data-frost] { stroke: var(--app-air-frost); stroke-width: 2; }
+.kwl-af-hx-fill { fill: var(--mantine-color-body); }
+.kwl-af-frost-line { stroke: var(--app-air-frost); stroke-width: 2; }
+.kwl-af-fan { fill: var(--mantine-color-body); stroke: var(--af-border-strong); stroke-width: 1.5; }
+.kwl-af-fan[data-fault] { stroke: var(--app-danger); stroke-width: 2.5; }
+.kwl-af-blade { fill: var(--mantine-color-dimmed); }
+.kwl-af-blade[data-off] { fill: var(--app-disabled-ink); }
+.kwl-af-fade { animation: kwl-af-fade 300ms ease-out; }
+
+/* Flow dots: a dashed stroke of round dots in surface-1, moved along its lane. */
+.kwl-flow-dot {
+  fill: none;
+  stroke: var(--mantine-color-body);
+  stroke-width: 4.4;
+  stroke-linecap: round;
+  stroke-dasharray: 0 34;
+  animation: kwl-af-flow var(--af-cycle, 2s) linear infinite;
+}
+.kwl-af-blades {
+  transform-origin: 0 0;
+  animation: kwl-af-spin var(--af-spin, 2s) linear infinite;
+}
+.kwl-af[data-paused] .kwl-flow-dot,
+.kwl-af[data-paused] .kwl-af-blades {
+  animation-play-state: paused;
+}
+
+@keyframes kwl-af-flow { to { stroke-dashoffset: -34; } }
+@keyframes kwl-af-spin { to { transform: rotate(360deg); } }
+@keyframes kwl-af-fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kwl-af-blades,
+  .kwl-af-fade {
+    animation: none;
+  }
+}
+
+/* Phone size: 168px diagram, smaller values, no direction words (the arrows carry them). */
+.kwl-af[data-size='phone'] .kwl-af-svg { width: 168px; }
+.kwl-af[data-size='phone'] .kwl-display { font-size: 22px; line-height: 26px; }
+.kwl-af[data-size='phone'] .kwl-af-name { font-size: 11px; line-height: 14px; }
+.kwl-af[data-size='phone'] .kwl-af-dir { display: none; }
+.kwl-af[data-size='phone'] .kwl-af-ctr b { font-size: 13px; line-height: 16px; }
+.kwl-af[data-size='phone'] .kwl-af-ctr span { font-size: 9px; line-height: 11px; }
+.kwl-af[data-size='phone'] .kwl-af-ctr-in { max-width: 44px; padding: 2px; }

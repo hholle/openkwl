@@ -1,0 +1,73 @@
+{
+  "badge": {
+    "offline": "Offline",
+    "fault": "Fault",
+    "checkUnit": "Check unit",
+    "filterDue": "Filter due",
+    "clockNotSet": "Clock not set",
+    "defrosting": "Defrosting",
+    "frost": "Frost protection",
+    "running": "Running"
+  },
+  "statusLabel": "Unit status: {{word}}. Show the overview.",
+  "statusLabelMore": "Unit status: {{word}}, and {{more}} more. Show the overview.",
+  "more": "{{n}} more ›",
+  "showMore": "Show more",
+  "showLess": "Show less",
+  "action": {
+    "restart": "Restart unit ›",
+    "backup": "Open backup and restore ›",
+    "confirmFilters": "Confirm filters changed ›",
+    "setClock": "Set the clock ›"
+  },
+  "sensor": {
+    "outdoor": "Outdoor air sensor",
+    "supply": "Supply air sensor",
+    "extract": "Extract air sensor",
+    "exhaust": "Exhaust air sensor"
+  },
+  "sensorOpen": "{{sensor}} not connected",
+  "sensorShort": "{{sensor}} short-circuited",
+  "sensorBody": "The unit keeps ventilating, but frost protection and bypass can't use this reading.",
+  "offline": {
+    "title": "Can't reach the unit",
+    "body": "Trying again every few seconds.",
+    "bodySince": "Showing the last values from {{time}}. Trying again every few seconds."
+  },
+  "supplyStall": {
+    "title": "Fault: supply fan not turning",
+    "body": "No fresh air is coming in. Check the fan for blockage, then restart the unit."
+  },
+  "exhaustStall": {
+    "title": "Fault: exhaust fan not turning",
+    "body": "Stale air isn't leaving the house. Check the fan for blockage, then restart the unit."
+  },
+  "sdCard": {
+    "title": "SD card can't be read",
+    "body": "Settings changes won't be saved until the card works again."
+  },
+  "configInvalid": {
+    "title": "Settings file couldn't be loaded",
+    "body": "The unit is running on the last good copy of its settings, or on its defaults if there is none."
+  },
+  "busOvercurrent": {
+    "title": "Module socket switched off",
+    "body": "Too much current was drawn on the extension module socket, so it was switched off. Ventilation keeps running; KNX control is unavailable. Check the module cable, then restart the unit."
+  },
+  "filter": {
+    "title": "Change the filters",
+    "body": "Both filters are due. Change them, then confirm under Settings › Filters."
+  },
+  "clock": {
+    "title": "Set the clock",
+    "body": "The schedule and summer cooling need the time."
+  },
+  "defrost": {
+    "title": "Defrosting",
+    "body": "Fresh air is paused for a few minutes while ice melts in the heat exchanger."
+  },
+  "frost": {
+    "title": "Frost protection is on",
+    "body": "It's freezing outside, so the exhaust fan runs faster to keep the heat exchanger free of ice."
+  }
+}

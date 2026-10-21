@@ -1,0 +1,127 @@
+{
+  "title": "Schedule",
+  "intro": "What the unit does by itself in Auto mode.",
+  "on": "On",
+  "profile": {
+    "standard": "Standard {{n}}",
+    "user": "User defined {{n}}"
+  },
+  "rows": {
+    "week": "Week",
+    "holiday": "Holiday",
+    "partyQuiet": "Party and Quiet",
+    "cooling": "Summer cooling",
+    "backToAuto": "Back to Auto",
+    "weekSummary_one": "{{profile}} · {{count}} change a day",
+    "weekSummary_other": "{{profile}} · {{count}} changes a day",
+    "clockNotSet": "Clock not set"
+  },
+  "week": {
+    "switchFailed": "Couldn't switch the profile.",
+    "using": "Using: {{profile}}",
+    "inUse": "{{profile}} (in use)",
+    "viewing": "Viewing {{profile}}, not in use.",
+    "useThis": "Use this schedule",
+    "dragHint": "Drag a boundary, or edit the times below. Times snap to 15 minutes.",
+    "editHint": "Edit the times below.",
+    "days": "Days",
+    "blocksOf": "{{group}}: time blocks",
+    "more": "More for {{group}}",
+    "copy": "Copy times",
+    "paste": "Paste times",
+    "reset": "Reset to {{profile}}",
+    "save": "Save schedule",
+    "undo": "Undo changes",
+    "useMonday": "Use {{monday}}'s times",
+    "from0": "From 00:00",
+    "earlier": "15 minutes earlier",
+    "later": "15 minutes later",
+    "fromBlock": "From, block {{n}}",
+    "to": "to {{time}}",
+    "delete": "Delete time block",
+    "levelFrom": "Level from {{time}}",
+    "count": "{{n}} of {{max}} time blocks",
+    "add": "Add time block"
+  },
+  "groups": {
+    "everyDay": "Every day",
+    "daily": "Daily",
+    "monFri": "Mon–Fri",
+    "all": "Same every day",
+    "weekdays": "Weekdays and weekend",
+    "each": "Each day separately",
+    "everyDayLower": "every day",
+    "range": "{{from}} to {{to}}",
+    "pair": "{{a}} and {{b}}",
+    "questionTitle": "Use {{monday}}'s times for {{which}}?",
+    "questionBody": "The times for {{days}} are replaced. Nothing is saved until you choose Save schedule."
+  },
+  "bar": {
+    "label": "{{label}}: {{blocks}}",
+    "startOf": "{{label}}: start of {{level}}"
+  },
+  "monthDay": {
+    "day": "{{label}}: day",
+    "month": "{{label}}: month"
+  },
+  "holiday": {
+    "intro": "While you're away, the fans run in short bursts to keep the air fresh and save energy.",
+    "enabled": "Holiday program on",
+    "away": "Away",
+    "awayHint": "First and last day",
+    "level": "Level",
+    "every": "Every",
+    "for": "For",
+    "sentence": "The fans run at {{level}} for {{min}} min every {{h}} h, {{when}}.",
+    "fromToSameMonth": "from {{from}} to {{to}}",
+    "fromTo": "from {{from}} to {{to}}"
+  },
+  "programs": {
+    "intro": "Short-term boosts you start from Overview. These are the usual settings; you can choose a different length each time.",
+    "partyLevel": "Party level",
+    "partyLength": "Party length",
+    "quietLevel": "Quiet level",
+    "quietLength": "Quiet length"
+  },
+  "cooling": {
+    "intro": "On summer nights the unit can bring in cool outdoor air without warming it up. It does this by opening the bypass, a flap that sends the air around the heat exchanger.",
+    "enabled": "Cool with outdoor air",
+    "enabledHint": "Opens the bypass when the house is warm and it's cooler outside.",
+    "target": "Start cooling when the house is above",
+    "minOutdoor": "…and outdoors is above",
+    "minOutdoorHint": "Keeps the house from getting too cold.",
+    "closeIfWarmer": "Stop when it's warmer outside than inside",
+    "season": "Only in certain months",
+    "from": "From",
+    "until": "Until",
+    "plugTitle": "Remove the rubber plug first",
+    "plugConfirm": "Turn on cooling",
+    "plugText": "With outdoor-air cooling on, condensate can form in the unit. The rubber plug of the condensate drain must be removed, otherwise water can damage the unit.",
+    "plugOut": "The plug is removed"
+  },
+  "backToAuto": {
+    "intro": "When you choose a level on Overview, Auto pauses. These options bring it back.",
+    "midnight": "Every day at midnight",
+    "afterChange": "After a manual change",
+    "after": "after",
+    "fallback": "Level while the clock isn't set"
+  },
+  "summary": {
+    "holidayRhythm": "{{level}} for {{min}} min every {{h}} h",
+    "programs": "Party: {{partyLevel}} for {{partyLength}} · Quiet: {{quietLevel}} for {{quietLength}}",
+    "coolingOn": "On, above {{temp}}",
+    "coolingSeason": "On, {{from}}–{{to}}, above {{temp}}",
+    "atMidnight": "At midnight",
+    "after": "After {{time}}",
+    "midnightOrAfter": "At midnight or after {{time}}",
+    "never": "Never",
+    "filterDue": "Due",
+    "reminderOff": "Reminder off",
+    "daysLeft_one": "{{count}} day left",
+    "daysLeft_other": "{{count}} days left",
+    "runningDays_one": "Running for {{count}} day",
+    "runningDays_other": "Running for {{count}} days",
+    "runningHours": "Running for {{h}} h",
+    "runningMinutes": "Running for {{min}} min"
+  }
+}

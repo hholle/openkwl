@@ -1,0 +1,127 @@
+{
+  "title": "Zeitplan",
+  "intro": "Was das Gerät im Auto-Modus von selbst tut.",
+  "on": "An",
+  "profile": {
+    "standard": "Standard {{n}}",
+    "user": "Benutzerdefiniert {{n}}"
+  },
+  "rows": {
+    "week": "Woche",
+    "holiday": "Urlaub",
+    "partyQuiet": "Party und Ruhe",
+    "cooling": "Sommerkühlung",
+    "backToAuto": "Zurück zu Auto",
+    "weekSummary_one": "{{profile}} · {{count}} Schaltzeit pro Tag",
+    "weekSummary_other": "{{profile}} · {{count}} Schaltzeiten pro Tag",
+    "clockNotSet": "Uhr nicht gestellt"
+  },
+  "week": {
+    "switchFailed": "Das Profil konnte nicht gewechselt werden.",
+    "using": "Aktiv: {{profile}}",
+    "inUse": "{{profile}} (aktiv)",
+    "viewing": "Du siehst {{profile}}, nicht aktiv.",
+    "useThis": "Diesen Zeitplan verwenden",
+    "dragHint": "Ziehe eine Grenze oder ändere die Zeiten unten. Zeiten rasten auf 15 Minuten ein.",
+    "editHint": "Ändere die Zeiten unten.",
+    "days": "Tage",
+    "blocksOf": "{{group}}: Zeitblöcke",
+    "more": "Mehr für {{group}}",
+    "copy": "Zeiten kopieren",
+    "paste": "Zeiten einfügen",
+    "reset": "Auf {{profile}} zurücksetzen",
+    "save": "Zeitplan speichern",
+    "undo": "Änderungen rückgängig machen",
+    "useMonday": "Zeiten vom {{monday}} übernehmen",
+    "from0": "Ab 00:00",
+    "earlier": "15 Minuten früher",
+    "later": "15 Minuten später",
+    "fromBlock": "Ab, Block {{n}}",
+    "to": "bis {{time}}",
+    "delete": "Zeitblock löschen",
+    "levelFrom": "Stufe ab {{time}}",
+    "count": "{{n}} von {{max}} Zeitblöcken",
+    "add": "Zeitblock hinzufügen"
+  },
+  "groups": {
+    "everyDay": "Jeden Tag",
+    "daily": "Täglich",
+    "monFri": "Mo–Fr",
+    "all": "Jeden Tag gleich",
+    "weekdays": "Werktage und Wochenende",
+    "each": "Jeder Tag einzeln",
+    "everyDayLower": "jeden Tag",
+    "range": "{{from}} bis {{to}}",
+    "pair": "{{a}} und {{b}}",
+    "questionTitle": "Zeiten vom {{monday}} für {{which}} übernehmen?",
+    "questionBody": "Die Zeiten für {{days}} werden ersetzt. Gespeichert wird erst, wenn du „Zeitplan speichern“ wählst."
+  },
+  "bar": {
+    "label": "{{label}}: {{blocks}}",
+    "startOf": "{{label}}: Beginn von {{level}}"
+  },
+  "monthDay": {
+    "day": "{{label}}: Tag",
+    "month": "{{label}}: Monat"
+  },
+  "holiday": {
+    "intro": "Während du weg bist, laufen die Ventilatoren in kurzen Intervallen. So bleibt die Luft frisch und du sparst Energie.",
+    "enabled": "Urlaubsprogramm an",
+    "away": "Abwesend",
+    "awayHint": "Erster und letzter Tag",
+    "level": "Stufe",
+    "every": "Alle",
+    "for": "Für",
+    "sentence": "Die Ventilatoren laufen {{when}} alle {{h}} h für {{min}} min auf {{level}}.",
+    "fromToSameMonth": "vom {{from}}. bis {{to}}",
+    "fromTo": "vom {{from}} bis {{to}}"
+  },
+  "programs": {
+    "intro": "Kurze Abweichungen, die du in der Übersicht startest. Das sind die üblichen Einstellungen; die Dauer kannst du jedes Mal neu wählen.",
+    "partyLevel": "Party-Stufe",
+    "partyLength": "Party-Dauer",
+    "quietLevel": "Ruhe-Stufe",
+    "quietLength": "Ruhe-Dauer"
+  },
+  "cooling": {
+    "intro": "In Sommernächten kann das Gerät kühle Außenluft hereinholen, ohne sie zu erwärmen. Dazu öffnet es den Bypass, eine Klappe, die die Luft am Wärmetauscher vorbeileitet.",
+    "enabled": "Mit Außenluft kühlen",
+    "enabledHint": "Öffnet den Bypass, wenn es im Haus warm und draußen kühler ist.",
+    "target": "Kühlen, wenn es im Haus wärmer ist als",
+    "minOutdoor": "…und draußen wärmer als",
+    "minOutdoorHint": "Damit das Haus nicht zu kalt wird.",
+    "closeIfWarmer": "Stoppen, wenn es draußen wärmer ist als drinnen",
+    "season": "Nur in bestimmten Monaten",
+    "from": "Von",
+    "until": "Bis",
+    "plugTitle": "Zuerst den Gummistopfen entfernen",
+    "plugConfirm": "Kühlung einschalten",
+    "plugText": "Wenn mit Außenluft gekühlt wird, kann sich im Gerät Kondenswasser bilden. Der Gummistopfen des Kondensatablaufs muss entfernt sein, sonst kann Wasser das Gerät beschädigen.",
+    "plugOut": "Der Stopfen ist entfernt"
+  },
+  "backToAuto": {
+    "intro": "Wenn du in der Übersicht eine Stufe wählst, pausiert Auto. Diese Optionen schalten es wieder ein.",
+    "midnight": "Jeden Tag um Mitternacht",
+    "afterChange": "Nach einer manuellen Änderung",
+    "after": "nach",
+    "fallback": "Stufe, solange die Uhr nicht gestellt ist"
+  },
+  "summary": {
+    "holidayRhythm": "{{level}} für {{min}} min alle {{h}} h",
+    "programs": "Party: {{partyLevel}} für {{partyLength}} · Ruhe: {{quietLevel}} für {{quietLength}}",
+    "coolingOn": "An, über {{temp}}",
+    "coolingSeason": "An, {{from}}–{{to}}, über {{temp}}",
+    "atMidnight": "Um Mitternacht",
+    "after": "Nach {{time}}",
+    "midnightOrAfter": "Um Mitternacht oder nach {{time}}",
+    "never": "Nie",
+    "filterDue": "Fällig",
+    "reminderOff": "Erinnerung aus",
+    "daysLeft_one": "Noch {{count}} Tag",
+    "daysLeft_other": "Noch {{count}} Tage",
+    "runningDays_one": "Läuft seit {{count}} Tag",
+    "runningDays_other": "Läuft seit {{count}} Tagen",
+    "runningHours": "Läuft seit {{h}} h",
+    "runningMinutes": "Läuft seit {{min}} min"
+  }
+}
