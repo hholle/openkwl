@@ -11,7 +11,7 @@
 //! | Tacho supply (CH2) / exhaust (CH1) | PB8 / PB9, EXTI falling edge, no pull; **1 pulse/rev** | observed (timers), inferred (pulses) |
 //! | Bypass motor open / close | PD10 / PD11 (PD8/PD9 driven low with them) | observed |
 //! | T1 outdoor / T2 supply / T3 extract / T4 exhaust | PA5 / PA6 / PB0 / PB1 (ADC1 IN5/6/8/9), Vref 2.5 V | observed |
-//! | NTC supply reference | PC3 (ADC1 IN13), V × 2, used for the NTC conversion | observed |
+//! | NTC supply reference | PC3 (ADC1 IN13), V × 2 (3.20 V on one unit), used for the NTC conversion | observed |
 //! | Supply rail | PA4 (ADC1 IN4), V × 23, ~24 V | observed (scale), inferred (role) |
 //! | 0–10 V inputs | PA0 (level switch, 2/4/6/8 V), PA3 (4.6 V threshold) | observed (scale), inferred (role) |
 //! | SD card | SDIO PC8–PC12, PD2; power PA15 (active low); no card detect (the stock firmware reads PH13, which the 100-pin STM32F207VC lacks) | observed (pins), inferred (polarity) |
@@ -36,11 +36,12 @@ pub const PWM_HZ: u32 = 13_700;
 /// Tacho pulses per fan revolution: the stock `3 156 000 / ticks` on a 52.576 kHz tick is
 /// exactly 60 × f / ticks, i.e. one pulse per revolution.
 pub const TACHO_PULSES_PER_REV: u32 = 1;
-/// ADC reference, and the NTC pull-up supply until PC3 has a plausible reading.
+/// ADC reference.
 pub const ADC_VREF: f32 = 2.5;
-/// PC3 readings outside this range (a broken divider or pin) are ignored and `ADC_VREF` is
-/// used instead; the stock firmware takes the reading as it is.
-pub const NTC_SUPPLY_VOLTS: core::ops::RangeInclusive<f32> = 2.2..=2.8;
+/// The NTC pull-up supply until the PC3 average has its first 8 samples (2 s after start):
+/// 3.20 V measured on a KWL EC 300 W R (2026-10-24), not the 2.5 V reference. After that
+/// the measurement is used as it is, like the stock firmware.
+pub const NTC_SUPPLY_NOMINAL: f32 = 3.2;
 /// Independent watchdog timeout (stock: 10 s).
 pub const WATCHDOG_US: u32 = 8_000_000;
 /// External crystal.

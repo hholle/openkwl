@@ -888,6 +888,12 @@ export interface components {
             knx_errors: number;
             /** @description Polls without an answer. */
             knx_timeouts: number;
+            /** @description Bytes received on the module bus since boot, usable or not. */
+            knx_rx_bytes: number;
+            /** @description Bytes received with a framing, noise or overrun error. */
+            knx_line_errors: number;
+            /** @description The first 16 bytes of the latest reception in hex, e.g. "14 04 20". */
+            knx_last_rx: string | null;
         };
         /** @description Raw board readings for bring-up, so the pin assumptions can be confirmed on the unit. */
         BoardDetails: {
@@ -899,6 +905,12 @@ export interface components {
             mains_pulses_per_s: number | null;
             /** @description Management address of the Ethernet PHY found by the scan. */
             phy_address: number | null;
+            /** @description Supply of the temperature sensors as measured on PC3, in mV. */
+            ntc_supply_mv: number | null;
+            /** @description Supply the temperature conversion uses, in mV: the measurement, or 3200 during the first 2 s after start. */
+            ntc_supply_used_mv: number | null;
+            /** @description Smoothed 12-bit ADC values of the outdoor, supply, extract and exhaust air sensors. */
+            ntc_raw: number[] | null;
         };
         FirmwareDetails: {
             version: string;

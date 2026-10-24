@@ -1,4 +1,4 @@
-//! The KWL-KNX module (Modbus slave 0x14), exactly as the stock controller serves it
+//! The KWL-KNX module (Modbus slave 0x19), exactly as the stock controller serves it
 //! (observed protocol behaviour; the frames in `knx/tests.rs` are the reference).
 //!
 //! Every second the controller reads the module's 16 input registers (function 04). In them
@@ -10,8 +10,11 @@
 
 use crate::modbus::{self, Error, FRAME_MAX};
 
-/// The module's fixed address ("Adresse intern fest").
-pub const ADDRESS: u8 = 0x14;
+/// Addresses to try, in order. The stock controller runs this block protocol with the
+/// device it lists as type 2 at 0x19 (first polled 15 s after power-up); 0x14 is the type-8
+/// entry in the same list. Until a unit confirms which one the KWL-KNX uses, both are asked
+/// in turn while no module answers.
+pub const ADDRESSES: [u8; 2] = [0x19, 0x14];
 const INPUT_REGS: usize = 16;
 /// "Invalid" for a temperature or sensor value.
 const INVALID_F32: f32 = 9999.0;
@@ -221,10 +224,10 @@ impl FanInput {
         Self { skip: true, last_auto: 0, last_level: 0 }
     }
 
-    /// `reg4` = the module's own address, `reg12` = its command; `auto` and `level` = the
-    /// controller's state now.
-    pub fn on_poll(&mut self, reg4: u16, reg12: u16, auto: bool, level: u8) -> Option<FanCommand> {
-        if reg4 & 0xFF != u16::from(ADDRESS) {
+    /// `address` = the module's bus address, `reg4` = the address it reports, `reg12` = its
+    /// command; `auto` and `level` = the controller's state now.
+    pub fn on_poll(&mut self, address: u8, reg4: u16, reg12: u16, auto: bool, level: u8) -> Option<FanCommand> {
+        if reg4 & 0xFF != u16::from(address) {
             return None;
         }
         let cmd = reg12 as u8;
@@ -299,6 +302,8 @@ pub const ANSWER_TIMEOUT_MS: u32 = 50;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Module {
     pub presence: Presence,
+    /// The address polled now (one of [`ADDRESSES`]); kept once the module answers.
+    pub address: u8,
     timeouts: u8,
     pub fan: FanInput,
     /// Register 5 low byte: 3 = application running.
@@ -321,6 +326,7 @@ impl Module {
     pub const fn new() -> Self {
         Self {
             presence: Presence::Searching,
+            address: ADDRESSES[0],
             timeouts: 0,
             fan: FanInput::new(),
             appl_status: 0,
@@ -333,8 +339,8 @@ impl Module {
     }
 
     /// The poll (function 04, all 16 input registers).
-    pub fn request(out: &mut [u8; FRAME_MAX]) -> usize {
-        modbus::read(out, ADDRESS, modbus::READ_INPUT, 0, INPUT_REGS as u16).unwrap_or(0)
+    pub fn request(&self, out: &mut [u8; FRAME_MAX]) -> usize {
+        modbus::read(out, self.address, modbus::READ_INPUT, 0, INPUT_REGS as u16).unwrap_or(0)
     }
 
     /// Handles the answer to [`Module::request`]: returns a fan command (if register 12
@@ -346,7 +352,7 @@ impl Module {
         out: &mut [u8; FRAME_MAX],
     ) -> Result<(Option<FanCommand>, Followup), Error> {
         let mut r = [0u16; INPUT_REGS];
-        if let Err(e) = modbus::read_answer(answer, ADDRESS, modbus::READ_INPUT, &mut r) {
+        if let Err(e) = modbus::read_answer(answer, self.address, modbus::READ_INPUT, &mut r) {
             self.bad = self.bad.wrapping_add(1);
             return Err(e);
         }
@@ -356,7 +362,7 @@ impl Module {
         self.appl_status = r[5] as u8;
         self.bootloader = u32::from(r[8]) | u32::from(r[9]) << 16;
         self.firmware = u32::from(r[10]) | u32::from(r[11]) << 16;
-        let command = self.fan.on_poll(r[4], r[12], s.auto, s.level);
+        let command = self.fan.on_poll(self.address, r[4], r[12], s.auto, s.level);
         let id = r[1];
         let followup = match r[0] {
             1 => {
@@ -365,12 +371,12 @@ impl Module {
                 if id == 1 {
                     self.fan.block1_served(s.level);
                 }
-                let len = modbus::write_multiple(out, ADDRESS, 0, &regs[..qty])?;
+                let len = modbus::write_multiple(out, self.address, 0, &regs[..qty])?;
                 Followup::Write { len, qty: qty as u16 }
             }
             2 => {
                 let qty = (block_len(id).div_ceil(2) + 3) as u16;
-                let len = modbus::read(out, ADDRESS, modbus::READ_HOLDING, 0, qty)?;
+                let len = modbus::read(out, self.address, modbus::READ_HOLDING, 0, qty)?;
                 Followup::Read { len, qty }
             }
             _ => Followup::None,
@@ -382,11 +388,11 @@ impl Module {
     pub fn on_followup_answer(&mut self, answer: &[u8], f: Followup) -> Result<Option<Push>, Error> {
         let result = match f {
             Followup::None => return Ok(None),
-            Followup::Write { qty, .. } => modbus::write_answer(answer, ADDRESS, 0, qty).map(|()| None),
+            Followup::Write { qty, .. } => modbus::write_answer(answer, self.address, 0, qty).map(|()| None),
             Followup::Read { qty, .. } => {
                 let mut regs = [0u16; 3 + 32];
                 let regs = regs.get_mut(..usize::from(qty)).ok_or(Error::Request)?;
-                modbus::read_answer(answer, ADDRESS, modbus::READ_HOLDING, regs).map(|()| parse_push(regs))
+                modbus::read_answer(answer, self.address, modbus::READ_HOLDING, regs).map(|()| parse_push(regs))
             }
         };
         match result {
@@ -402,6 +408,11 @@ impl Module {
         self.timeouts = self.timeouts.saturating_add(1);
         if self.timeouts >= TIMEOUTS_GONE {
             self.presence = Presence::NotFound;
+        }
+        // Not (or no longer) answering: try the other address next time.
+        if self.presence != Presence::Connected {
+            let next = ADDRESSES.iter().position(|&a| a == self.address).map_or(0, |i| (i + 1) % ADDRESSES.len());
+            self.address = ADDRESSES[next];
         }
     }
 

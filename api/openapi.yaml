@@ -1194,7 +1194,7 @@ components:
     ModuleDetails:
       type: object
       description: Extension modules on the RS-485 module bus.
-      required: [bus_power, knx, knx_firmware, knx_frames, knx_errors, knx_timeouts]
+      required: [bus_power, knx, knx_firmware, knx_frames, knx_errors, knx_timeouts, knx_rx_bytes, knx_line_errors, knx_last_rx]
       properties:
         bus_power:
           type: string
@@ -1208,16 +1208,27 @@ components:
         knx_frames: { type: integer, minimum: 0, description: Answers received since boot. }
         knx_errors: { type: integer, minimum: 0, description: 'Answers with a wrong checksum, address or length, and error replies.' }
         knx_timeouts: { type: integer, minimum: 0, description: Polls without an answer. }
+        knx_rx_bytes: { type: integer, minimum: 0, description: 'Bytes received on the module bus since boot, usable or not.' }
+        knx_line_errors: { type: integer, minimum: 0, description: 'Bytes received with a framing, noise or overrun error.' }
+        knx_last_rx: { type: [string, 'null'], maxLength: 47, description: 'The first 16 bytes of the latest reception in hex, e.g. "14 04 20".' }
 
     BoardDetails:
       type: object
       description: Raw board readings for bring-up, so the pin assumptions can be confirmed on the unit.
-      required: [card_detect_present, sd_power_active_low, mains_pulses_per_s, phy_address]
+      required: [card_detect_present, sd_power_active_low, mains_pulses_per_s, phy_address, ntc_supply_mv, ntc_supply_used_mv, ntc_raw]
       properties:
         card_detect_present: { type: [boolean, 'null'], description: 'Card-detect pin (PH13) said "present" at boot.' }
         sd_power_active_low: { type: [boolean, 'null'], description: The SD card switched on with PA15 low (stock) rather than high. }
         mains_pulses_per_s: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Zero-cross pulses per second on PB3 (50/100 on mains, 0 on a bench supply).' }
         phy_address: { type: [integer, 'null'], minimum: 0, maximum: 31, description: Management address of the Ethernet PHY found by the scan. }
+        ntc_supply_mv: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Supply of the temperature sensors as measured on PC3, in mV.' }
+        ntc_supply_used_mv: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Supply the temperature conversion uses, in mV: the measurement, or 3200 during the first 2 s after start.' }
+        ntc_raw:
+          type: [array, 'null']
+          items: { type: integer, minimum: 0, maximum: 4095 }
+          minItems: 4
+          maxItems: 4
+          description: Smoothed 12-bit ADC values of the outdoor, supply, extract and exhaust air sensors.
 
     FirmwareDetails:
       type: object

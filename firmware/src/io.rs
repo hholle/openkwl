@@ -46,7 +46,7 @@ pub fn inputs() -> Inputs {
 
 /// Round-robin over the four NTCs every 250 ms with an 8-sample moving average, like the
 /// stock firmware. The NTC pull-up supply is measured on PC3 each round
-/// and used for the conversion, as stock does.
+/// and used for the conversion, as stock does, once its average is filled.
 #[embassy_executor::task]
 pub async fn sensor_task(
     mut adc: Adc<'static, ADC1>,
@@ -58,13 +58,23 @@ pub async fn sensor_task(
     let mut avg: [MovingAverage<8>; 4] = [MovingAverage::new(), MovingAverage::new(), MovingAverage::new(), MovingAverage::new()];
     let mut ticker = Ticker::every(Duration::from_millis(250));
     let mut next = 0;
+    let mut supply_samples = 0u8;
     loop {
         let raw = adc.blocking_read(&mut ntc_supply, SampleTime::CYCLES480);
-        let supply = ntc::supply_volts(supply_avg.push(u32::from(raw)) as u16);
-        let supply = if board::NTC_SUPPLY_VOLTS.contains(&supply) { supply } else { board::ADC_VREF };
+        let measured = ntc::supply_volts(supply_avg.push(u32::from(raw)) as u16);
+        // The average ramps up from zero (stock behaviour), which would read as cable breaks.
+        supply_samples = supply_samples.saturating_add(1);
+        let supply = if supply_samples >= 8 { measured } else { board::NTC_SUPPLY_NOMINAL };
         let raw = adc.blocking_read(&mut channels[next], SampleTime::CYCLES480);
         let mean = avg[next].push(u32::from(raw)) as u16;
         let reading = ntc::raw_to_reading(mean, supply);
+        // For *Technical details › Board*: what the conversion saw, to check it on the unit.
+        let mv = |v: f32| (v * 1000.0 + 0.5) as u16;
+        crate::sysinfo::board_report(|b| {
+            b.ntc_supply_mv = Some(mv(measured));
+            b.ntc_supply_used_mv = Some(mv(supply));
+            b.ntc_raw.get_or_insert([0; 4])[next] = mean;
+        });
         INPUTS.lock(|c| {
             let mut i = c.get();
             match next {

@@ -139,6 +139,9 @@ static BOARD: Mutex<CriticalSectionRawMutex, RefCell<openkwl_api::BoardDetails>>
         sd_power_active_low: None,
         mains_pulses_per_s: None,
         phy_address: None,
+        ntc_supply_mv: None,
+        ntc_supply_used_mv: None,
+        ntc_raw: None,
     }));
 
 pub fn board_report(f: impl FnOnce(&mut openkwl_api::BoardDetails)) {

@@ -375,8 +375,9 @@ fn a_guessing_client_does_not_lock_out_the_owner() {
 
 /// A KWL-KNX answering a poll: its 16 input registers as a function-04 answer.
 fn knx_answer(reg0: u16, reg1: u16, reg12: u16) -> std::vec::Vec<u8> {
-    let regs = [reg0, reg1, 0, 0, 0x14, 3, 0, 0, 100, 0, 120, 0, reg12, 0, 0, 0];
-    let mut f = std::vec![0x14, 0x04, 0x20];
+    let address = openkwl_bus::knx::ADDRESSES[0];
+    let regs = [reg0, reg1, 0, 0, u16::from(address), 3, 0, 0, 100, 0, 120, 0, reg12, 0, 0, 0];
+    let mut f = std::vec![address, 0x04, 0x20];
     for r in regs {
         f.extend_from_slice(&r.to_be_bytes());
     }

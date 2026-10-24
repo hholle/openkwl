@@ -36,14 +36,14 @@ fn write_frame(id: u16, s: &Snapshot) -> std::vec::Vec<u8> {
     let mut regs = [0u16; 35];
     let n = block_registers(id, s, &mut regs);
     let mut out = [0u8; FRAME_MAX];
-    let len = modbus::write_multiple(&mut out, ADDRESS, 0, &regs[..n]).unwrap();
+    let len = modbus::write_multiple(&mut out, 0x14, 0, &regs[..n]).unwrap();
     out[..len].to_vec()
 }
 
 #[test]
 fn poll_request() {
     let mut out = [0u8; FRAME_MAX];
-    let n = Module::request(&mut out);
+    let n = Module { address: 0x14, ..Module::new() }.request(&mut out);
     assert_eq!(&out[..n], hex("14 04 00 00 00 10 F3 03"));
 }
 
@@ -119,21 +119,21 @@ fn answer_frames_match_the_vectors() {
 fn fan_input_follows_stock() {
     let mut f = FanInput::new();
     // First answer after start-up: ignored.
-    assert_eq!(f.on_poll(0x14, 0x03, false, 2), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, false, 2), None);
     // Manual level 3 while manual at 2.
-    assert_eq!(f.on_poll(0x14, 0x03, false, 2), Some(FanCommand::Manual(3)));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, false, 2), Some(FanCommand::Manual(3)));
     // Unchanged: nothing (the web UI may have changed the level meanwhile).
-    assert_eq!(f.on_poll(0x14, 0x03, false, 1), None);
-    assert_eq!(f.on_poll(0x14, 0x04, false, 1), Some(FanCommand::Manual(4)));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, false, 1), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x04, false, 1), Some(FanCommand::Manual(4)));
     // Auto from KNX; a level sent along is ignored in Auto.
-    assert_eq!(f.on_poll(0x14, 0x82, false, 4), Some(FanCommand::Auto));
-    assert_eq!(f.on_poll(0x14, 0x83, true, 1), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x82, false, 4), Some(FanCommand::Auto));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x83, true, 1), None);
     // Another module address: ignored.
-    assert_eq!(f.on_poll(0x15, 0x01, true, 1), None);
+    assert_eq!(f.on_poll(0x14, 0x15, 0x01, true, 1), None);
     // Auto → manual 3 from KNX: mode and level in one poll.
-    assert_eq!(f.on_poll(0x14, 0x03, true, 1), Some(FanCommand::Manual(3)));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, true, 1), Some(FanCommand::Manual(3)));
     // Levels above 4 are clamped (stock would keep the old level).
-    assert_eq!(f.on_poll(0x14, 0x09, false, 3), Some(FanCommand::Manual(4)));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x09, false, 3), Some(FanCommand::Manual(4)));
 }
 
 #[test]
@@ -141,23 +141,23 @@ fn a_steady_manual_report_does_not_leave_auto() {
     // Stock starts with "last mode = manual": a module that keeps reporting manual changes
     // nothing while the unit runs in Auto; only a change of the automatic bit counts.
     let mut f = FanInput::new();
-    assert_eq!(f.on_poll(0x14, 0x03, true, 2), None);
-    assert_eq!(f.on_poll(0x14, 0x03, true, 2), None);
-    assert_eq!(f.on_poll(0x14, 0x04, true, 2), None, "a level in Auto is only remembered");
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, true, 2), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x03, true, 2), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x04, true, 2), None, "a level in Auto is only remembered");
 }
 
 #[test]
 fn first_auto_is_applied_on_the_second_poll() {
     // Stock compares the high nibble with 0 at first: a module reporting Auto switches to Auto.
     let mut f = FanInput::new();
-    assert_eq!(f.on_poll(0x14, 0x83, false, 2), None);
-    assert_eq!(f.on_poll(0x14, 0x83, false, 2), Some(FanCommand::Auto));
+    assert_eq!(f.on_poll(0x14, 0x14, 0x83, false, 2), None);
+    assert_eq!(f.on_poll(0x14, 0x14, 0x83, false, 2), Some(FanCommand::Auto));
 }
 
 #[test]
 fn transaction_with_block_request_and_push() {
     let s = snapshot();
-    let mut m = Module::new();
+    let mut m = Module { address: 0x14, ..Module::new() };
     let mut out = [0u8; FRAME_MAX];
     let (cmd, f) = m.on_answer(&answer(1, 1, 0x83), &s, &mut out).unwrap();
     assert_eq!(cmd, None);
@@ -177,7 +177,7 @@ fn transaction_with_block_request_and_push() {
 
 #[test]
 fn exception_and_timeouts() {
-    let mut m = Module::new();
+    let mut m = Module { address: 0x14, ..Module::new() };
     let mut out = [0u8; FRAME_MAX];
     assert_eq!(m.on_answer(&hex("14 84 02 D3 05"), &snapshot(), &mut out), Err(Error::Exception(2)));
     assert_eq!(m.presence, Presence::Searching, "an exception is no timeout");
@@ -189,7 +189,27 @@ fn exception_and_timeouts() {
         .collect();
     assert_eq!(delays, [1000, 1400, 2400, 3400, 3400, 4400, 4400, 4400, 4400, 4400, ABSENT_POLL_MS]);
     assert_eq!(m.presence, Presence::NotFound);
-    // Unlike stock, a module that comes back is found again.
+    // Unlike stock, a module that comes back is found again (here when 0x14 is asked).
+    m.address = 0x14;
     m.on_answer(&answer(0, 0, 0), &snapshot(), &mut out).unwrap();
     assert_eq!((m.presence, m.next_poll_ms()), (Presence::Connected, POLL_MS));
+}
+
+#[test]
+fn asks_both_addresses_until_one_answers() {
+    let mut m = Module::new();
+    let mut out = [0u8; FRAME_MAX];
+    let n = m.request(&mut out);
+    assert_eq!(out[0], 0x19, "{:02x?}", &out[..n]);
+    m.on_timeout();
+    m.request(&mut out);
+    assert_eq!(out[0], 0x14);
+    m.on_timeout();
+    assert_eq!(m.address, 0x19);
+    // Found at 0x14: stays there, also through a missed answer.
+    m.address = 0x14;
+    m.on_answer(&answer(0, 0, 0x83), &snapshot(), &mut out).unwrap();
+    assert_eq!(m.presence, Presence::Connected);
+    m.on_timeout();
+    assert_eq!(m.address, 0x14);
 }

@@ -112,8 +112,9 @@ list for users: [HOME_ASSISTANT.md](HOME_ASSISTANT.md)):
 
 Facts, as observed in the stock firmware's behaviour. In short:
 
-- The KWL-KNX is a Modbus RTU slave (address 0x14, 57600 8N1) on the RS-485 module bus
-  (USART1, PB10 = driver enable). Its supply comes from the bus' +24 V, switched by PE8, which
+- The KWL-KNX is a Modbus RTU slave (57600 8N1) on the RS-485 module bus
+  (USART1, PB10 = driver enable). The stock firmware runs its block protocol with address
+  0x19 (0x14 is another device type in its list); openKWL asks both until one answers. Its supply comes from the bus' +24 V, switched by PE8, which
   openKWL holds off today.
 - The controller polls it every second and exchanges "blocks" (copies of the stock firmware's
   RAM structs): level and auto flag from KNX; level, mode, time, status, temperatures, filter to

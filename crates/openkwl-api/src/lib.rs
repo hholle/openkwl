@@ -46,7 +46,7 @@ pub use status::{
     Temperatures,
 };
 pub use system::{
-    BoardDetails, BusPower, ChipDetails, Counters, DeviceIdentity, FirmwareDetails, KnxState, MemoryDetails, ModuleDetails,
+    BoardDetails, BusPower, ChipDetails, KNX_LAST_RX_MAX, Counters, DeviceIdentity, FirmwareDetails, KnxState, MemoryDetails, ModuleDetails,
     MqttDetails, NetworkDetails, ResetReason, SetTimeRequest, StockDetails, StorageDetails, SystemDetails, SystemInfo, TimeDetails,
     TimeSource,
 };

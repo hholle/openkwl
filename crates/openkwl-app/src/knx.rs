@@ -103,6 +103,13 @@ impl App {
         let _ = self.apply_control(&r);
     }
 
+    /// A module bus event for the log: found, lost, or a reception that could not be used
+    /// (with its first bytes in hex).
+    pub fn knx_log(&mut self, event: &str, detail: &str) {
+        let sep = if detail.is_empty() { "" } else { " " };
+        self.log(format_args!("KNX: {event}{sep}{detail}"));
+    }
+
     /// A block the module offered.
     pub fn knx_push(&mut self, push: Push) {
         match push {

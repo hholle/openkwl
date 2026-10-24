@@ -171,6 +171,9 @@ fn run() -> Result<(), String> {
                 sd_power_active_low: Some(true),
                 mains_pulses_per_s: Some(100),
                 phy_address: Some(0),
+                ntc_supply_mv: Some(3200),
+                ntc_supply_used_mv: Some(3200),
+                ..Default::default()
             },
             ..Default::default()
         });

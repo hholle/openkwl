@@ -115,7 +115,7 @@ pub struct SystemDetails {
 }
 
 /// Upper bound of the encoded [`SystemDetails`].
-pub const SYSTEM_DETAILS_JSON_MAX: usize = 2368;
+pub const SYSTEM_DETAILS_JSON_MAX: usize = 2572;
 
 /// Supply of the module bus (+24 V on the RJ-10 socket for extension modules).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -160,7 +160,18 @@ pub struct ModuleDetails {
     pub knx_errors: u32,
     /// Polls without an answer.
     pub knx_timeouts: u32,
+    /// Bytes received on the module bus since boot, usable or not.
+    pub knx_rx_bytes: u32,
+    /// Bytes received with a framing, noise or overrun error (wrong speed or format, or
+    /// interference).
+    pub knx_line_errors: u32,
+    /// The first bytes of the latest reception in hex, e.g. `"14 04 20 …"`; `null` before
+    /// anything arrived.
+    pub knx_last_rx: Option<heapless::String<KNX_LAST_RX_MAX>>,
 }
+
+/// Length bound of [`ModuleDetails::knx_last_rx`]: 16 bytes in hex with spaces.
+pub const KNX_LAST_RX_MAX: usize = 47;
 
 /// Raw board readings for bring-up: what the firmware found instead of assuming it.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -175,6 +186,14 @@ pub struct BoardDetails {
     pub mains_pulses_per_s: Option<u16>,
     /// Management address of the Ethernet PHY found by the scan, `null` if none answered.
     pub phy_address: Option<u8>,
+    /// Supply of the NTC pull-ups as measured on PC3 (smoothed), in mV; `null` before the
+    /// first reading.
+    pub ntc_supply_mv: Option<u16>,
+    /// The supply the temperature conversion uses, in mV: the measurement, or the nominal
+    /// 3.2 V during the first 2 s after start.
+    pub ntc_supply_used_mv: Option<u16>,
+    /// Smoothed 12-bit ADC values of T1 outdoor, T2 supply, T3 extract and T4 exhaust air.
+    pub ntc_raw: Option<[u16; 4]>,
 }
 
 /// The running image.
@@ -497,6 +516,9 @@ mod tests {
                 sd_power_active_low: Some(false),
                 mains_pulses_per_s: Some(u16::MAX),
                 phy_address: Some(u8::MAX),
+                ntc_supply_mv: Some(u16::MAX),
+                ntc_supply_used_mv: Some(u16::MAX),
+                ntc_raw: Some([u16::MAX; 4]),
             },
             modules: ModuleDetails {
                 bus_power: BusPower::Overcurrent,
@@ -505,6 +527,9 @@ mod tests {
                 knx_frames: u32::MAX,
                 knx_errors: u32::MAX,
                 knx_timeouts: u32::MAX,
+                knx_rx_bytes: u32::MAX,
+                knx_line_errors: u32::MAX,
+                knx_last_rx: Some("x".repeat_into()),
             },
         };
         let json = round_trip::<_, SYSTEM_DETAILS_JSON_MAX>(&d);

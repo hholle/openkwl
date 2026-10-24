@@ -66,10 +66,17 @@
     "knxFirmware": "KNX-Firmware",
     "knxFrames": "Antworten / Prüfsummenfehler",
     "knxTimeouts": "Keine Antwort",
+    "knxRx": "Empfangene Bytes / Übertragungsfehler",
+    "knxLastRx": "Zuletzt empfangen",
     "cardDetect": "Kartenerkennung (PH13)",
     "sdPower": "SD-Versorgung (PA15)",
     "mainsPulses": "Netzimpulse (PB3)",
     "phyAddress": "Adresse des Ethernet-Chips",
+    "ntcSupply": "Sensorversorgung (PC3)",
+    "ntcOutdoor": "Außenluftfühler (PA5)",
+    "ntcSupplyAir": "Zuluftfühler (PA6)",
+    "ntcExtract": "Abluftfühler (PB0)",
+    "ntcExhaust": "Fortluftfühler (PB1)",
     "requests": "Anfragen / Fehler",
     "failedLogins": "Fehlgeschlagene Anmeldungen",
     "sessions": "Offene Sitzungen"
@@ -101,7 +108,9 @@
     "sdPowerLow": "an bei Low (wie Original)",
     "sdPowerHigh": "an bei High",
     "perSecond": "{{n}} pro Sekunde",
-    "noneFound": "keiner gefunden"
+    "noneFound": "keiner gefunden",
+    "ntcSupplyIgnored": "{{measured}} gemessen, {{used}} verwendet",
+    "ntcRaw": "{{raw}} → {{ohms}} Ω"
   },
   "resetReason": {
     "power_on": "Einschalten",

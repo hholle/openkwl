@@ -15,8 +15,23 @@ from the web UI and the KNX module.
 
 Licensed under the MIT License.
 
+### Fixed
+
+- **KWL-KNX not found:** openKWL asked address 0x14, but the stock firmware runs the KNX block
+  protocol with address 0x19. It now asks 0x19 first and 0x14 in turn until one answers; the log
+  names the address it was found at.
+- **Temperatures read about 7 K too low:** the sensor supply measured on PC3 is about 3.2 V,
+  not 2.5 V; openKWL ignored the measurement as implausible and converted with 2.5 V. It now
+  always uses the measurement like the stock firmware (3.2 V only for the first 2 s after start).
+
 ### Added
 
+- **Temperature sensor diagnostics** in *Technical details › Board*: the sensor supply measured on
+  PC3 and the one the conversion uses, and each sensor's raw ADC value and resistance
+  (`GET /system/details`, `board.ntc_supply_mv`, `ntc_supply_used_mv`, `ntc_raw`).
+- **Module bus diagnostics** in *Technical details › Extension modules*: bytes received, line
+  errors and the last bytes received; the log notes when the KNX module is found or lost and the
+  first unusable answers. The receiver is off while the controller sends.
 - **Own look:** the web UI uses its own petrol accent colour and logo, not the manufacturer's
   brand colours, so it can't be mistaken for an official product.
 - **Safety notice** once after setup in the web UI: experimental, check fans and air direction,

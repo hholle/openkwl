@@ -66,10 +66,17 @@
     "knxFirmware": "KNX firmware",
     "knxFrames": "Answers / checksum errors",
     "knxTimeouts": "No answer",
+    "knxRx": "Bytes received / line errors",
+    "knxLastRx": "Last bytes received",
     "cardDetect": "Card detect (PH13)",
     "sdPower": "SD power (PA15)",
     "mainsPulses": "Mains pulses (PB3)",
     "phyAddress": "Ethernet chip address",
+    "ntcSupply": "Sensor supply (PC3)",
+    "ntcOutdoor": "Outdoor air sensor (PA5)",
+    "ntcSupplyAir": "Supply air sensor (PA6)",
+    "ntcExtract": "Extract air sensor (PB0)",
+    "ntcExhaust": "Exhaust air sensor (PB1)",
     "requests": "Requests / errors",
     "failedLogins": "Failed logins",
     "sessions": "Open sessions"
@@ -101,7 +108,9 @@
     "sdPowerLow": "on when low (as stock)",
     "sdPowerHigh": "on when high",
     "perSecond": "{{n}} per second",
-    "noneFound": "none found"
+    "noneFound": "none found",
+    "ntcSupplyIgnored": "{{measured}} measured, {{used}} used",
+    "ntcRaw": "{{raw}} → {{ohms}} Ω"
   },
   "resetReason": {
     "power_on": "power on",
