@@ -42,6 +42,8 @@ pub const STATE_B: &str = "STATEB.BIN";
 pub const SETUP_INI: &str = "SETUP.INI";
 /// Empty marker file in the card root: wipe `AUTH.BIN` and `AUTH.BAK` at boot (password reset).
 pub const RESET_PW: &str = "RESETPW";
+/// Day records of the history in `HELIOS/` (`openkwl_app::history`), one slot per day of the year.
+pub const DAYS: &str = "DAYS.BIN";
 /// Largest `CONFIG.INI` the firmware reads (a full config with 4 schedules is ≈ 6 KB).
 pub const CONFIG_MAX_LEN: usize = 12 * 1024;
 

@@ -14,6 +14,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@mantine/charts": "9.7.2",
     "@mantine/core": "9.7.2",
     "@mantine/dates": "9.7.2",
     "@mantine/form": "9.7.2",
@@ -23,7 +24,8 @@
     "i18next": "26.5.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-i18next": "17.1.0"
+    "react-i18next": "17.1.0",
+    "recharts": "3.10.1"
   },
   "devDependencies": {
     "@types/node": "26.6.5",

@@ -85,6 +85,23 @@ house isn't heated by the extract air. Set:
 change, or never. Only the clock running past midnight counts, not a correction of the clock
 that lands on another day.
 
+## History
+
+*History* shows how the unit ran, in four views:
+
+- **Last 24 hours** (the default): the four air temperatures, the recovered heat and the fan
+  level in quarter hours, with the times the bypass was open or frost protection ran.
+- **Live:** the same at a finer step, but only while the page is open in this browser.
+- **Day:** one day of the past, with its figures (lowest, mean and highest temperatures,
+  recovered heat, time per level).
+- **Month:** each day's temperatures and recovered heat, hours per level, and for the month the
+  recovered heat in kWh, the heat-recovery efficiency (an estimate from the temperatures), the
+  heating degree-days (Gradtagzahl G20/15) and the hours of bypass and frost protection.
+
+The unit keeps today in its memory and writes one record per day to the SD card after
+midnight, so the card is barely written to. A restart loses today so far: that day is then
+marked as partial. For history over years, use Home Assistant, which records every value.
+
 ## Settings
 
 | Section | What it's for |

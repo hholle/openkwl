@@ -8,7 +8,7 @@ use std::{
 
 use openkwl_app::{App, Boot, PlatformInfo, Writes};
 use openkwl_config::{
-    AUTH_BAK, AUTH_BIN, CONFIG_BAK, CONFIG_INI, Config, DIR, RESET_PW, SECRETS_BAK, SECRETS_INI, auth_file, ini,
+    AUTH_BAK, AUTH_BIN, CONFIG_BAK, CONFIG_INI, Config, DAYS, DIR, RESET_PW, SECRETS_BAK, SECRETS_INI, auth_file, ini,
     state::{self, Loaded, RECORD_LEN},
 };
 
@@ -99,7 +99,14 @@ impl Card {
         fs::write(self.path(name), data)
     }
 
-    pub fn persist(&mut self, app: &App, w: &Writes) -> io::Result<()> {
+    pub fn persist(&mut self, app: &mut App, w: &Writes) -> io::Result<()> {
+        if w.day {
+            let mut record = [0u8; openkwl_app::history::RECORD_LEN];
+            if let Some((offset, len)) = app.history_finished(&mut record) {
+                days_write(&self.root, offset, &record[..len])?;
+                println!("sd: wrote {DAYS} at {offset}");
+            }
+        }
         if w.config {
             let mut text = String::new();
             ini::write_config(app.config(), &mut text).map_err(io::Error::other)?;
@@ -130,6 +137,28 @@ impl Card {
         }
         Ok(())
     }
+}
+
+/// Writes a day record at `offset` in `HELIOS/DAYS.BIN`, growing the file with zeros up to
+/// it, as the firmware (`openkwl_app::history`).
+pub fn days_write(sd: &Path, offset: u32, record: &[u8]) -> io::Result<()> {
+    use std::io::{Seek, SeekFrom, Write};
+    let mut f = fs::OpenOptions::new().create(true).truncate(false).read(true).write(true).open(sd.join(DIR).join(DAYS))?;
+    if f.metadata()?.len() < u64::from(offset) {
+        f.set_len(u64::from(offset))?;
+    }
+    f.seek(SeekFrom::Start(u64::from(offset)))?;
+    f.write_all(record)
+}
+
+/// The record at `offset` of `HELIOS/DAYS.BIN`, if the file reaches that far.
+pub fn days_read(sd: &Path, offset: u32, len: usize) -> Option<Vec<u8>> {
+    use std::io::{Read, Seek, SeekFrom};
+    let mut f = fs::File::open(sd.join(DIR).join(DAYS)).ok()?;
+    f.seek(SeekFrom::Start(u64::from(offset))).ok()?;
+    let mut record = vec![0u8; len];
+    f.read_exact(&mut record).ok()?;
+    Some(record)
 }
 
 /// What the stock firmware left on the card: `FwBasis` of `settings.ini`. Read-only.

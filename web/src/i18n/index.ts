@@ -14,6 +14,7 @@ import deApp from './locales/de/app.json';
 import deCommon from './locales/de/common.json';
 import deDetails from './locales/de/details.json';
 import deFaults from './locales/de/faults.json';
+import deHistory from './locales/de/history.json';
 import deOverview from './locales/de/overview.json';
 import deSchedule from './locales/de/schedule.json';
 import deSettings from './locales/de/settings.json';
@@ -23,6 +24,7 @@ import enApp from './locales/en/app.json';
 import enCommon from './locales/en/common.json';
 import enDetails from './locales/en/details.json';
 import enFaults from './locales/en/faults.json';
+import enHistory from './locales/en/history.json';
 import enOverview from './locales/en/overview.json';
 import enSchedule from './locales/en/schedule.json';
 import enSettings from './locales/en/settings.json';
@@ -31,8 +33,8 @@ import enUpdate from './locales/en/update.json';
 
 /** English is the reference; its files define the keys (and their types, `i18next.d.ts`). */
 export const resources = {
-  en: { common: enCommon, app: enApp, overview: enOverview, schedule: enSchedule, settings: enSettings, details: enDetails, faults: enFaults, setup: enSetup, update: enUpdate },
-  de: { common: deCommon, app: deApp, overview: deOverview, schedule: deSchedule, settings: deSettings, details: deDetails, faults: deFaults, setup: deSetup, update: deUpdate },
+  en: { common: enCommon, app: enApp, overview: enOverview, schedule: enSchedule, settings: enSettings, details: enDetails, faults: enFaults, history: enHistory, setup: enSetup, update: enUpdate },
+  de: { common: deCommon, app: deApp, overview: deOverview, schedule: deSchedule, settings: deSettings, details: deDetails, faults: deFaults, history: deHistory, setup: deSetup, update: deUpdate },
 } as const;
 
 export type Lang = keyof typeof resources;

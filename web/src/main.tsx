@@ -1,5 +1,6 @@
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
+import '@mantine/charts/styles.css';
 import './theme/mantine-overrides.css';
 
 import 'dayjs/locale/de';

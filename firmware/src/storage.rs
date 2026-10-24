@@ -367,6 +367,42 @@ impl Storage {
         .is_some()
     }
 
+    /// Writes a day record at `offset` in `HELIOS/DAYS.BIN` (`openkwl_app::history`), growing
+    /// the file with zeros up to it the first time: one write a day, in place once a year ran.
+    pub fn days_write(&self, offset: u32, record: &[u8]) -> bool {
+        self.with_dir(Dir::Helios, |d| {
+            let f = d.open_file_in_dir(openkwl_config::DAYS, Mode::ReadWriteCreateOrAppend)?;
+            let zeros = [0u8; 512];
+            while f.length() < offset {
+                f.write(&zeros[..(offset - f.length()).min(512) as usize])?;
+            }
+            f.seek_from_start(offset)?;
+            f.write(record)?;
+            f.close()
+        })
+        .is_some()
+    }
+
+    /// Reads the record at `offset` of `HELIOS/DAYS.BIN` into `out`; `false` if there is none.
+    pub fn days_read(&self, offset: u32, out: &mut [u8]) -> bool {
+        self.with_dir(Dir::Helios, |d| {
+            let f = d.open_file_in_dir(openkwl_config::DAYS, Mode::ReadOnly)?;
+            if f.length() < offset + out.len() as u32 {
+                return Ok(false);
+            }
+            f.seek_from_start(offset)?;
+            let mut n = 0;
+            while n < out.len() {
+                match f.read(&mut out[n..])? {
+                    0 => break,
+                    r => n += r,
+                }
+            }
+            Ok(n == out.len())
+        })
+        .unwrap_or(false)
+    }
+
     fn delete(&self, dir: Dir, name: &str) -> bool {
         self.with_dir(dir, |d| d.delete_entry_in_dir(name)).is_some()
     }
@@ -667,7 +703,7 @@ struct Prepared {
 
 /// Writes requested by the control loop, merged until the storage task gets to them.
 static PENDING: BlockingMutex<CriticalSectionRawMutex, Cell<Writes>> =
-    BlockingMutex::new(Cell::new(Writes { config: false, secrets: false, auth: false, state: None }));
+    BlockingMutex::new(Cell::new(Writes { config: false, secrets: false, auth: false, state: None, day: false }));
 static WAKE: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 /// Raised when a save completes and no further writes are pending, for restart and
 /// power-fail (they reset it after their request, then wait).
@@ -686,6 +722,7 @@ pub fn request(w: Writes) {
         all.secrets |= w.secrets;
         all.auth |= w.auth;
         all.state = w.state.or(all.state);
+        all.day |= w.day;
         p.set(all);
     });
     WAKE.signal(());
@@ -738,12 +775,13 @@ pub async fn storage_task(app: &'static SharedApp, card: &'static Card) -> ! {
         }
         // An import or export holds the big buffer while it talks to the browser: then
         // CONFIG.INI waits for the next round, and counters and the rest go now.
-        let mut big = if PENDING.lock(|p| p.get().config) { BIG.try_lock().ok() } else { None };
+        let mut big = if PENDING.lock(|p| p.get().config || p.get().day) { BIG.try_lock().ok() } else { None };
         let w = PENDING.lock(|p| {
             let mut w = p.replace(Writes::default());
-            if w.config && big.is_none() {
+            if (w.config || w.day) && big.is_none() {
+                p.set(Writes { config: w.config, day: w.day, ..Writes::default() });
                 w.config = false;
-                p.set(Writes { config: true, ..Writes::default() });
+                w.day = false;
             }
             w
         });
@@ -752,6 +790,14 @@ pub async fn storage_task(app: &'static SharedApp, card: &'static Card) -> ! {
         }
         let mut g = card.lock().await;
         if let Some(s) = g.as_deref_mut() {
+            // The finished day first: the big buffer holds its record only for this.
+            if w.day
+                && let Some(b) = big.as_deref_mut()
+                && let Some((offset, len)) = app.lock().await.history_finished(&mut b[..])
+                && !s.days_write(offset, &b[..len])
+            {
+                warn!("sd: day record not written");
+            }
             {
                 let a = app.lock().await;
                 s.prepare(&a, &w, big.as_deref_mut().map(|b| &mut b[..]));

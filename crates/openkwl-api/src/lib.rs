@@ -46,7 +46,7 @@ pub use status::{
     Temperatures,
 };
 pub use system::{
-    BoardDetails, BusPower, ChipDetails, KNX_LAST_RX_MAX, Counters, DeviceIdentity, FirmwareDetails, KnxState, MemoryDetails, ModuleDetails,
+    BoardDetails, BusPower, ChipDetails, Counters, DeviceIdentity, FirmwareDetails, KnxState, MemoryDetails, ModuleDetails,
     MqttDetails, NetworkDetails, ResetReason, SetTimeRequest, StockDetails, StorageDetails, SystemDetails, SystemInfo, TimeDetails,
     TimeSource,
 };
@@ -89,6 +89,10 @@ pub mod paths {
     pub const SYSTEM_DETAILS: &str = "/api/v1/system/details";
     pub const SYSTEM_TIME: &str = "/api/v1/system/time";
     pub const REBOOT: &str = "/api/v1/system/reboot";
+    /// Today's day record so far (`application/octet-stream`, `openkwl_app::history`).
+    pub const HISTORY_TODAY: &str = "/api/v1/history/today";
+    /// Followed by `YYYY-MM-DD` (one stored day record) or `YYYY-MM` (all of the month).
+    pub const HISTORY_DAYS: &str = "/api/v1/history/days/";
 }
 
 /// Semantic checks beyond what deserialisation guarantees.

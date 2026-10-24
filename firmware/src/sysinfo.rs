@@ -140,7 +140,6 @@ static BOARD: Mutex<CriticalSectionRawMutex, RefCell<openkwl_api::BoardDetails>>
         mains_pulses_per_s: None,
         phy_address: None,
         ntc_supply_mv: None,
-        ntc_supply_used_mv: None,
         ntc_raw: None,
     }));
 

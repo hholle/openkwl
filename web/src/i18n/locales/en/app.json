@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Overview",
     "schedule": "Schedule",
+    "history": "History",
     "settings": "Settings",
     "pages": "Pages",
     "attention": "{{page}} needs your attention"

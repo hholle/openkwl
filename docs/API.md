@@ -137,11 +137,22 @@ curl -s -X PUT $UNIT/api/v1/config/filter -H "Authorization: Bearer $TOKEN" \
 | `GET` | `/system` | Firmware version, MAC and IP address, uptime, last reset, SD card and MQTT state |
 | `GET` | `/system/details` | Everything the firmware knows about itself (*Technical details*) |
 | `GET` | `/log` | Recent log lines (RAM, plain text) |
+| `GET` | `/history/today` | Today so far as a day record (binary, see below) |
+| `GET` | `/history/days/YYYY-MM-DD` | One stored day record; `/history/days/YYYY-MM` every stored day of the month, concatenated (empty if none) |
 | `PUT` | `/system/update` | Upload an update package ([UPDATING.md](UPDATING.md#the-api)) |
 | `POST` | `/system/reboot` | Restart after the answer is sent |
 
 The request and response schemas, with every field, range and default, are in
 [`api/openapi.yaml`](../api/openapi.yaml).
+
+**Day records** (`/history/…`) are binary, 1216 bytes each, little-endian: a 64-byte header
+(`"KL"`, version, date as days since 1970-01-01, CRC-32, seconds recorded, seconds per level,
+bypass and frost seconds, heat and cooling recovered in Wh, mean fan speeds) and 96
+quarter-hour points (four air temperatures in 0.1 °C, recovered heat power in W, level, bypass
+and frost flags). The exact layout is in `crates/openkwl-app/src/history.rs` and in the
+`DayRecord` schema of `api/openapi.yaml`. They are binary to keep the firmware small; the web
+UI decodes them and computes the statistics. For long-term history, Home Assistant records
+every value openKWL publishes.
 
 ## Errors
 

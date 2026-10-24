@@ -195,6 +195,15 @@ async fn handle(
         }
         return respond(socket, status, "application/json", "Cache-Control: no-store\r\n", body.as_bytes()).await;
     }
+    // Stored day records come straight from the card (`openkwl_app::history`).
+    if method == Method::Get
+        && let Some(arg) = path.strip_prefix(openkwl_api::paths::HISTORY_DAYS)
+    {
+        if !app.lock().await.session_valid(authorization.as_deref()) {
+            return respond(socket, 401, "application/json", "", br#"{"error":"unauthorized","message":"log in first"}"#).await;
+        }
+        return serve_days(socket, arg, out, card).await;
+    }
     if path.starts_with("/api/") {
         let too_large = br#"{"error":"payload_too_large","message":"body too large"}"#;
         let large = LARGE_PATHS.contains(&path.as_str());
@@ -258,6 +267,31 @@ async fn handle(
         return respond(socket, r.status, r.content_type, &extra, &answer[..r.len]).await;
     }
     serve_www(id, socket, &path, versioned, out, card).await
+}
+
+/// One stored day (`YYYY-MM-DD`) or every stored day of a month (`YYYY-MM`), oldest first.
+async fn serve_days(socket: &mut TcpSocket<'_>, arg: &str, out: &mut [u8], card: &'static Card) -> Result<(), &'static str> {
+    use openkwl_app::history::{RECORD_LEN, days_requested, slot_offset, valid};
+    let Some((first, count)) = days_requested(arg) else {
+        return respond(socket, 400, "application/json", "", br#"{"error":"bad_request","message":"use YYYY-MM or YYYY-MM-DD"}"#)
+            .await;
+    };
+    let record = &mut out[..RECORD_LEN];
+    let read = async |day: u16, record: &mut [u8]| {
+        card.lock().await.as_deref_mut().is_some_and(|s| s.days_read(slot_offset(day), record)) && valid(record, day)
+    };
+    // The length is not known before the card was read: the body ends with the connection.
+    // An empty body means no record (one day, or none in the month).
+    socket
+        .write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nCache-Control: no-store\r\nX-Frame-Options: DENY\r\nConnection: close\r\n\r\n")
+        .await
+        .map_err(|_| "write")?;
+    for day in first..first + u16::from(count) {
+        if read(day, record).await {
+            socket.write_all(record).await.map_err(|_| "write")?;
+        }
+    }
+    Ok(())
 }
 
 /// Long names the browser asks for (favicons, fonts) → their 8.3 names on the card;

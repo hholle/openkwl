@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { parseRoute, pathOf, redirectFor } from './router';
 
 describe('routes', () => {
-  it('parses the three pages and their sections', () => {
+  it('parses the four pages and their sections', () => {
     expect(parseRoute('/')).toEqual({ page: 'overview', section: null });
     expect(parseRoute('/schedule/week')).toEqual({ page: 'schedule', section: 'week' });
     expect(parseRoute('/settings')).toEqual({ page: 'settings', section: null });
+    expect(parseRoute('/history')).toEqual({ page: 'history', section: null });
+    expect(parseRoute('/history/month')).toEqual({ page: 'history', section: 'month' });
+    expect(pathOf('history', 'day')).toBe('/history/day');
     expect(parseRoute('/nonsense')).toEqual({ page: 'overview', section: null });
     expect(pathOf('settings', 'clock')).toBe('/settings/clock');
     expect(pathOf('overview')).toBe('/');

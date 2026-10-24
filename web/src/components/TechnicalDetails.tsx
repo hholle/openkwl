@@ -21,7 +21,7 @@ type GroupId = keyof (typeof resources)['en']['details']['groups'];
 type Row = [id: RowId, value: string | number, problem?: boolean];
 
 /** Identifiers are set in monospace so they can be checked character by character. */
-const IDENTIFIERS = new Set<RowId>(['version', 'build', 'uniqueId', 'address', 'gateway', 'dns', 'timeServer', 'ntpDhcp', 'mac', 'broker', 'deviceId', 'bootloader', 'fwBasis', 'knxLastRx']);
+const IDENTIFIERS = new Set<RowId>(['version', 'build', 'uniqueId', 'address', 'gateway', 'dns', 'timeServer', 'ntpDhcp', 'mac', 'broker', 'deviceId', 'bootloader', 'fwBasis']);
 
 /** How values are written: in the page's language, or in English for the copied report. */
 interface Fmt {
@@ -48,17 +48,12 @@ function groups(d: Details, { t: tr, num, time }: Fmt): [group: GroupId, rows: R
       : tr('value.ofTotal', { part: bytes(part), whole: bytes(whole) });
   const mhz = (hz: number) => num(hz / 1e6);
   const volts = (mv: number) => `${num(mv / 1000, 2)}\u00a0V`;
-  const ntcSupply = () => {
-    const { ntc_supply_mv: m, ntc_supply_used_mv: u } = b;
-    if (m === null || u === null) return '—';
-    return m === u ? volts(m) : tr('value.ntcSupplyIgnored', { measured: volts(m), used: volts(u) });
-  };
   // The sensor's resistance as the firmware computes it (10 kΩ pull-up, 2.5 V ADC reference).
   const ntc = (i: number) => {
     const raw = b.ntc_raw?.[i];
-    if (raw === undefined || b.ntc_supply_used_mv === null) return '—';
+    if (raw === undefined || b.ntc_supply_mv === null) return '—';
     const v = (raw * 2.5) / 4096;
-    const headroom = b.ntc_supply_used_mv / 1000 - v;
+    const headroom = b.ntc_supply_mv / 1000 - v;
     return headroom > 0 ? tr('value.ntcRaw', { raw, ohms: num(Math.floor((10_000 * v) / headroom)) }) : String(raw);
   };
   return [
@@ -153,7 +148,7 @@ function groups(d: Details, { t: tr, num, time }: Fmt): [group: GroupId, rows: R
         ['knxFrames', `${mo.knx_frames} / ${mo.knx_errors}`],
         ['knxTimeouts', mo.knx_timeouts],
         ['knxRx', `${mo.knx_rx_bytes} / ${mo.knx_line_errors}`, mo.knx_line_errors > 0],
-        ['knxLastRx', orDash(mo.knx_last_rx)],
+        ['busSense', `${num(mo.bus_sense_mv)}\u00a0mV`],
       ],
     ],
     [
@@ -163,7 +158,7 @@ function groups(d: Details, { t: tr, num, time }: Fmt): [group: GroupId, rows: R
         ['sdPower', known(b.sd_power_active_low, tr('value.sdPowerLow'), tr('value.sdPowerHigh'))],
         ['mainsPulses', b.mains_pulses_per_s === null ? '—' : tr('value.perSecond', { n: b.mains_pulses_per_s })],
         ['phyAddress', b.phy_address === null ? tr('value.noneFound') : String(b.phy_address)],
-        ['ntcSupply', ntcSupply(), b.ntc_supply_mv !== b.ntc_supply_used_mv],
+        ['ntcSupply', b.ntc_supply_mv === null ? '—' : volts(b.ntc_supply_mv)],
         ...NTC_ROWS.map((id, i): Row => [id, ntc(i)]),
       ],
     ],

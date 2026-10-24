@@ -375,9 +375,8 @@ fn a_guessing_client_does_not_lock_out_the_owner() {
 
 /// A KWL-KNX answering a poll: its 16 input registers as a function-04 answer.
 fn knx_answer(reg0: u16, reg1: u16, reg12: u16) -> std::vec::Vec<u8> {
-    let address = openkwl_bus::knx::ADDRESSES[0];
-    let regs = [reg0, reg1, 0, 0, u16::from(address), 3, 0, 0, 100, 0, 120, 0, reg12, 0, 0, 0];
-    let mut f = std::vec![address, 0x04, 0x20];
+    let regs = [reg0, reg1, 0, 0, 0x14, 3, 0, 0, 100, 0, 120, 0, reg12, 0, 0, 0];
+    let mut f = std::vec![0x14, 0x04, 0x20];
     for r in regs {
         f.extend_from_slice(&r.to_be_bytes());
     }
@@ -871,4 +870,31 @@ fn home_assistant_measurements_are_rate_limited() {
     assert!(h.app.ha_state_due(false).is_none(), "diagnostics wait longer");
     h.tick(HA_DIAGNOSTIC_MIN_S - HA_MEASUREMENT_MIN_S, Some(t0 + HA_DIAGNOSTIC_MIN_S + HA_MEASUREMENT_MIN_S), &i);
     assert!(h.app.ha_state_due(false).is_some());
+}
+
+#[test]
+fn history_today_is_a_day_record() {
+    let mut h = Harness::logged_in();
+    let get = |h: &mut Harness| {
+        let auth = h.token.as_ref().map(|t| format!("Bearer {t}"));
+        let req = Request {
+            method: Method::Get,
+            path: openkwl_api::paths::HISTORY_TODAY,
+            authorization: auth.as_deref(),
+            client: 0,
+            host: None,
+            json: false,
+            body: b"",
+        };
+        let mut out = [0u8; 4096];
+        let r = h.app.handle(&req, &mut h.rng, &mut out);
+        (r.status, r.content_type, out[..r.len].to_vec())
+    };
+    assert_eq!(get(&mut h).0, 404, "no clock, no record");
+    h.tick(600, Some(MONDAY_NOON), &inputs());
+    let (status, content_type, body) = get(&mut h);
+    assert_eq!((status, content_type, body.len()), (200, crate::http::BINARY, crate::history::RECORD_LEN));
+    let day = (MONDAY_NOON / 86_400) as u16;
+    assert!(crate::history::valid(&body, day), "a local day (the test zone keeps noon on that day)");
+    assert_eq!(u32::from_le_bytes(body[12..16].try_into().unwrap()), 600);
 }

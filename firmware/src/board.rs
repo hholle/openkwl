@@ -24,6 +24,7 @@
 //! | Electric pre-heater (VHZ EH) | PB14 SSR, zero-cross burst firing; held **off** (owner has none) | inferred |
 //! | Module bus (BEC panel, sensors) | PE8 supply switch (+PE4), PC2 current sense, USART1 PA9/PA10 + PB10 DE; held **off** | inferred |
 //! | Fault outputs | PE5 / PE6; held low | inferred |
+//! | PD14 | never configured, written or read by the stock firmware: left an input | observed |
 //! | Humidity sensor (SHT1x/7x, optional) | PB6 SCK / PB7 DATA, bit-banged | inferred |
 //! | Factory MAC | OTP 0x1FFF7800, ASCII | observed |
 //! | Internal flash | sector 0 bootloader, **sector 1 stock settings ring buffer (keep)**, sectors 2–5 app | observed |

@@ -13,11 +13,17 @@ are in the repository.
 
 1. **Finish the first test on the unit** (`docs/INSTALL.md`) and fix what it shows. Section 2
    lists what is still unconfirmed.
-2. **KNX module (KWL-KNX)**: implemented (section 4); to confirm on a unit with the module.
+2. **KNX module (KWL-KNX)**: implemented (section 4); found on a unit (2026-10-24, firmware 0.16,
+   level and Auto from KNX work); the remaining blocks still to watch.
 3. **Firmware update from the web UI**: implemented (section 5); to try on the unit once the
    normal build runs there (the `sd-log` debug build has no room for it).
 4. Optional, later: MQTT over TLS (`embedded-tls`, about 35 KB of RAM), only if a broker outside
    the LAN is needed.
+5. **History and statistics**: implemented (2026-10-24, `openkwl_app::history`, the *History*
+   page): live view from `/status`, the last 24 hours and daily records on the SD card (§3.1),
+   statistics computed in the browser. To confirm on the unit: the first midnight's write.
+   Flash: under 1 KB left in the normal build; the next feature needs a saving first (likely
+   a hand-written JSON writer for `/system/details`, whose serde code is 3.6 KB).
 
 ### Security hardening, still open
 
@@ -83,6 +89,12 @@ Technical details › Board*.
   15 minutes would otherwise cost about 100 writes a day; beyond the cap the mode waits for the
   next 6-hourly, restart or power-fail save. Any state save also carries a pending mode change.
   A filter reset is saved at once (one write, rare).
+- **History** (`openkwl_app::history`): the day in progress stays in RAM (96 quarter-hour
+  points and the day's totals, 1.2 KB); one 1216-byte record is written after each local
+  midnight into its slot of `DAYS.BIN` (`day % 366` × 2048 bytes, in place): one write a day.
+  The first write grows the file with zeros up to the day's slot (up to 0.75 MB, once); a day
+  that can't be written within 15 minutes (no card) is dropped. A restart loses the day so
+  far; the record then covers less than 24 h (`seconds recorded`).
 - **`CONFIG.BAK`** also follows a hand-edited `CONFIG.INI` that loads (at boot, only when it
   differs); a `CONFIG.INI` that doesn't load leaves both files alone.
 - **Logs** stay in RAM (`GET /api/v1/log`). Only the `sd-log` debug build writes a log file.
@@ -113,8 +125,8 @@ list for users: [HOME_ASSISTANT.md](HOME_ASSISTANT.md)):
 Facts, as observed in the stock firmware's behaviour. In short:
 
 - The KWL-KNX is a Modbus RTU slave (57600 8N1) on the RS-485 module bus
-  (USART1, PB10 = driver enable). The stock firmware runs its block protocol with address
-  0x19 (0x14 is another device type in its list); openKWL asks both until one answers. Its supply comes from the bus' +24 V, switched by PE8, which
+  (USART1, PB10 = driver enable), address 0x14 (confirmed on a unit, 2026-10-24). PD14 must
+  stay an input: driven low it silences the whole bus. Its supply comes from the bus' +24 V, switched by PE8, which
   openKWL holds off today.
 - The controller polls it every second and exchanges "blocks" (copies of the stock firmware's
   RAM structs): level and auto flag from KNX; level, mode, time, status, temperatures, filter to

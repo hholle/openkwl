@@ -172,13 +172,12 @@ fn run() -> Result<(), String> {
                 mains_pulses_per_s: Some(100),
                 phy_address: Some(0),
                 ntc_supply_mv: Some(3200),
-                ntc_supply_used_mv: Some(3200),
                 ..Default::default()
             },
             ..Default::default()
         });
         let writes = a.take_writes();
-        card.persist(&a, &writes).map_err(|e| format!("sd: {e}"))?;
+        card.persist(&mut a, &writes).map_err(|e| format!("sd: {e}"))?;
         let actions = a.take_actions();
         if let Some(t) = actions.set_time_unix {
             clock_offset = t as i64 - (start_unix + sim_seconds) as i64;

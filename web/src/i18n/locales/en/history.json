@@ -1,0 +1,86 @@
+{
+  "title": "History",
+  "intro": "How temperatures, heat recovery and fan levels have changed.",
+  "views": {
+    "label": "Period",
+    "live": "Live",
+    "last24": "24 hours",
+    "day": "Day",
+    "month": "Month"
+  },
+  "sensor": {
+    "outdoor": "Outdoor air",
+    "supply": "Supply air",
+    "extract": "Extract air",
+    "exhaust": "Exhaust air"
+  },
+  "chart": {
+    "temperatures": "Temperatures",
+    "power": "Recovered heat",
+    "powerHint": "Above zero the unit warms the fresh air, below zero it cools it.",
+    "level": "Fan level",
+    "bypass": "Bypass open",
+    "frost": "Frost protection"
+  },
+  "live": {
+    "title": "Live",
+    "note": "Records only while this page is open: one reading every 10 seconds, for up to 6 hours. Reloading the page clears it.",
+    "waiting": "Waiting for the first readings…"
+  },
+  "last24": {
+    "title": "Last 24 hours",
+    "note": "Quarter-hour means. Today is kept in the unit's memory and starts again after a restart; earlier days are on the SD card."
+  },
+  "day": {
+    "previous": "Show previous day",
+    "next": "Show next day",
+    "today": "Show today",
+    "inMonth": "Show {{month}}",
+    "empty": "Nothing recorded on this day",
+    "emptyBody": "The unit keeps a day on the SD card from the night after it was recorded."
+  },
+  "month": {
+    "previous": "Show previous month",
+    "next": "Show next month",
+    "empty": "No days recorded in {{month}}",
+    "emptyBody": "The unit writes one record per day, just after midnight. The first day appears the day after the update.",
+    "temperatures": "Temperatures per day",
+    "range": "Lowest, mean and highest quarter-hour mean of each day.",
+    "lowest": "Lowest",
+    "mean": "Mean",
+    "highest": "Highest",
+    "energy": "Recovered heat per day",
+    "levels": "Hours at each fan level",
+    "days": "Days",
+    "dayCol": "Day",
+    "openDay": "Show {{date}}",
+    "partialNote": "Partial days (the unit started, restarted or got its clock that day) are marked ◐ and count only the recorded hours.",
+    "partial": "Partial day: {{hours}} recorded"
+  },
+  "stats": {
+    "heating": "Heat recovered",
+    "cooling": "Cooling recovered",
+    "degreeDays": "Heating degree-days",
+    "degreeDaysHint": "G20/15: for each day with a mean outdoor temperature below 15 °C, 20 °C minus that mean.",
+    "efficiency": "Heat recovery (estimate)",
+    "efficiencyHint": "(supply − outdoor) ÷ (extract − outdoor), from quarter-hours with the fans on, the bypass closed, no frost protection and at least 5 K between outdoor and extract air.",
+    "outdoorMean": "Outdoor air, mean",
+    "extractMean": "Extract air, mean",
+    "range": "{{min}} to {{max}}",
+    "bypass": "Bypass open",
+    "frost": "Frost protection",
+    "fans": "Fan speed, mean",
+    "fansValue": "{{supply}} / {{exhaust}}",
+    "fansHint": "Supply / exhaust fan, while running.",
+    "recorded": "Recorded",
+    "daysValue": "{{days}} of {{total}} days"
+  },
+  "load": {
+    "failed": "Couldn't load the history.",
+    "unsupported": "This firmware doesn't record a history yet.",
+    "unreadable": "The unit sent history data this page can't read. Update the web interface together with the firmware.",
+    "retry": "Try again",
+    "empty": "Nothing recorded yet",
+    "emptyBody": "The unit records quarter-hour means; the first appears 15 minutes after it starts. Today's values are kept in memory and start again after a restart."
+  }
+}

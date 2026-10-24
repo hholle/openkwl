@@ -107,6 +107,25 @@ fn handle(mut stream: TcpStream, app: &Mutex<App>, www: Option<&Path>, sd: &Path
     let mut body = vec![0u8; length];
     reader.read_exact(&mut body)?;
 
+    // Stored day records straight from the card, as the firmware (`http.rs`, `serve_days`).
+    if method == "GET"
+        && let Some(arg) = path.strip_prefix(openkwl_api::paths::HISTORY_DAYS)
+    {
+        use openkwl_app::history::{RECORD_LEN, days_requested, slot_offset, valid};
+        if !app.lock().expect("app lock").session_valid(authorization.as_deref()) {
+            return respond(&mut stream, 401, "application/json", br#"{"error":"unauthorized","message":"log in first"}"#, "");
+        }
+        let Some((first, count)) = days_requested(arg) else {
+            return respond(&mut stream, 400, "application/json", br#"{"error":"bad_request","message":"use YYYY-MM or YYYY-MM-DD"}"#, "");
+        };
+        let mut body = Vec::new();
+        for day in first..first + u16::from(count) {
+            if let Some(r) = crate::storage::days_read(sd, slot_offset(day), RECORD_LEN).filter(|r| valid(r, day)) {
+                body.extend_from_slice(&r);
+            }
+        }
+        return respond(&mut stream, 200, openkwl_app::http::BINARY, &body, "");
+    }
     if path.starts_with("/api/") {
         // As the firmware: the throttle locks per IPv4 client (IPv6, e.g. ::1, counts as one).
         let client = match stream.peer_addr().map(|a| a.ip()) {

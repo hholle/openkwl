@@ -220,6 +220,7 @@ outside `HELIOS/`.
 | `HELIOS/SECRETS.INI`, `SECRETS.BAK` | openKWL | MQTT password (never shown in the UI), and its copy. |
 | `HELIOS/AUTH.BIN`, `AUTH.BAK` | openKWL | The web password (salted hash), and its copy. Put `RESETPW` in the root to set a new one. |
 | `HELIOS/STATEA.BIN`, `STATEB.BIN` | import, then openKWL | Counters and mode, written alternately so a power cut never loses both. |
+| `HELIOS/DAYS.BIN` | openKWL | History: one record per day (96 quarter-hour points and the day's totals), written once after midnight; up to 0.75 MB. |
 | `HELIOS/BOOT.LOG` | openKWL | One line per start-up step, plain text: how far each start got (`firmware/README.md`, *Debugging on the unit*). |
 | `HELIOS/DEFMT.LOG` | `sd-log` build | Debug log (binary; decode with the matching ELF). |
 | `RESETPW` | you | Empty file: the next start clears the web password and deletes this file. |

@@ -2,6 +2,7 @@
   "nav": {
     "overview": "Übersicht",
     "schedule": "Zeitplan",
+    "history": "Verlauf",
     "settings": "Einstellungen",
     "pages": "Seiten",
     "attention": "{{page}}: bitte ansehen"

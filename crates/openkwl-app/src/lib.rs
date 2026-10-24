@@ -17,6 +17,7 @@
 #![no_std]
 
 pub mod buf;
+pub mod history;
 pub mod http;
 pub mod knx;
 pub mod log;
@@ -162,6 +163,8 @@ pub struct Writes {
     pub secrets: bool,
     pub auth: bool,
     pub state: Option<RuntimeState>,
+    /// A finished day for `HELIOS/DAYS.BIN` (`App::history_finished`).
+    pub day: bool,
 }
 
 /// One-shot requests to the platform.
@@ -200,6 +203,8 @@ pub struct App {
     frost_out: Option<frost::Outputs>,
     bypass_moving_s: u32,
     heat_power_w: Option<f32>,
+    /// Today in quarter hours, for the history.
+    pub(crate) history: history::Recorder,
     /// Most recent non-zero level, for Home Assistant's "ON".
     last_level: u8,
     pub(crate) config_invalid: bool,
@@ -252,6 +257,7 @@ impl App {
             frost_out: None,
             bypass_moving_s: 0,
             heat_power_w: None,
+            history: history::Recorder::new(),
             last_level: state.manual_level.max(1),
             config_invalid,
             platform,
@@ -439,6 +445,17 @@ impl App {
             self.energy.add_second(p);
         }
 
+        let sample = history::Sample {
+            temperatures: [t_out, t_sup, t_ext, inputs.exhaust.celsius()],
+            power_w: self.heat_power_w,
+            level,
+            bypass_open: open,
+            frost: frost_out.active,
+            supply_rpm: inputs.supply_rpm,
+            exhaust_rpm: inputs.exhaust_rpm,
+        };
+        self.history.on_second(self.local_time(), self.uptime_s, &sample);
+
         self.outputs = Outputs {
             supply_volts: if supply_duty == 0 { 0.0 } else { supply_v },
             exhaust_volts: if exhaust_duty == 0 { 0.0 } else { exhaust_v },
@@ -461,6 +478,13 @@ impl App {
         }
     }
 
+    /// The finished day's record for `HELIOS/DAYS.BIN` (after `Writes::day`): its byte offset
+    /// in the file and its length in `out` ([`history::RECORD_LEN`] bytes). The recorder then
+    /// starts the new day.
+    pub fn history_finished(&mut self, out: &mut [u8]) -> Option<(u32, usize)> {
+        self.history.finished_record(out)
+    }
+
     /// Files to write now; call after every tick. Assumes the platform writes them.
     pub fn take_writes(&mut self) -> Writes {
         let now = self.uptime_s;
@@ -471,6 +495,7 @@ impl App {
         }
         w.secrets = core::mem::take(&mut self.secrets_dirty);
         w.auth = core::mem::take(&mut self.auth_dirty);
+        w.day = self.history.take_finished();
         if self.actions.reboot {
             self.state_save.force();
             w.config |= self.config_save.dirty();

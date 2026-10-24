@@ -1,6 +1,6 @@
 import { Anchor, Box, Group, SimpleGrid, Text, UnstyledButton, VisuallyHidden } from '@mantine/core';
 import { useHover, useMediaQuery } from '@mantine/hooks';
-import { IconCalendarTime, IconSettings, IconWind } from '@tabler/icons-react';
+import { IconCalendarTime, IconChartLine, IconSettings, IconWind } from '@tabler/icons-react';
 import type { ComponentType } from 'react';
 import type { Status } from '../api/client';
 import { link, type Page, pathOf } from '../lib/router';
@@ -11,15 +11,17 @@ import { t } from '../i18n';
 const PAGES: { page: Page; label: () => string; icon: ComponentType<{ size?: number; stroke?: number }> }[] = [
   { page: 'overview', label: () => t('app:nav.overview'), icon: IconWind },
   { page: 'schedule', label: () => t('app:nav.schedule'), icon: IconCalendarTime },
+  { page: 'history', label: () => t('app:nav.history'), icon: IconChartLine },
   { page: 'settings', label: () => t('app:nav.settings'), icon: IconSettings },
 ];
 
 /**
- * The bottom tab bar is only for screens too narrow for the header tabs (below 420px, where the
- * wordmark, three tabs and a long status badge don't fit in one line).
+ * The bottom tab bar is only for screens too narrow for the header tabs (below 640px, where the
+ * wordmark, four tabs (German: Übersicht, Zeitplan, Verlauf, Einstellungen) and a long status
+ * badge don't fit in one line).
  */
 export function useTabBar(): boolean {
-  return useMediaQuery('(max-width: 26.24em)', false, { getInitialValueInEffect: false });
+  return useMediaQuery('(max-width: 39.99em)', false, { getInitialValueInEffect: false });
 }
 
 /** Pages that need a look: a small brand-coloured dot on their tab (never for blue, automatic states). */
@@ -40,7 +42,7 @@ function Dot({ label }: { label: string }) {
   );
 }
 
-/** Header (56px desktop, 52px phone): wordmark, the three tabs (unless the tab bar shows), clock from `sm` and StatusBadge. */
+/** Header (56px desktop, 52px phone): wordmark, the four tabs (unless the tab bar shows), clock from `sm` and StatusBadge. */
 export function AppHeader({
   page,
   status,
@@ -107,7 +109,7 @@ function HeaderTab({ label, to, active, dot, compact }: { label: string; to: str
 /** Phone tab bar (64px + safe area): icon over label, brand-coloured icon on the active page. */
 export function TabBar({ page, attention }: { page: Page; attention: Attention }) {
   return (
-    <SimpleGrid component="nav" aria-label={t('app:nav.pages')} cols={3} spacing={0} h={64}>
+    <SimpleGrid component="nav" aria-label={t('app:nav.pages')} cols={PAGES.length} spacing={0} h={64}>
       {PAGES.map(({ page: p, label: labelOf, icon: Icon }) => {
         const label = labelOf();
         const active = page === p;

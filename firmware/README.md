@@ -174,7 +174,10 @@ The normal build is the fullest: the firmware update (about 3 KB) fits because t
 no log output (2.5 KB), no `BOOT.LOG` (0.8 KB), and the stock-image scan of *Technical details*
 was dropped (1.1 KB).
 
-About 7 KB free in the normal build (2026-10-21) since request bodies are read by `openkwl_api::json` instead of serde's per-type parsers (about 8.9 KB); `json()`/`parse()` in `openkwl-app` stay out of line (inlined they cost 2.2 KB). Next candidates:
+**Under 1 KB free in the normal build (2026-10-24)** after the history (day recorder, day
+records on the card, about 3.5 KB) and the module bus and sensor diagnostics: the next feature
+needs a saving first, e.g. a hand-written JSON writer for `/system/details` (3.6 KB of serde
+code). Earlier: about 7 KB free in the normal build (2026-10-21) since request bodies are read by `openkwl_api::json` instead of serde's per-type parsers (about 8.9 KB); `json()`/`parse()` in `openkwl-app` stay out of line (inlined they cost 2.2 KB). Next candidates:
 mostly `serde-json-core` code per config type; a shared non-generic helper may save a few KB.
 
 **Stack:** there is no guard below it, so an overflow silently corrupts statics. Build large

@@ -89,7 +89,10 @@ function timeout(ms: number): AbortSignal {
   return c.signal;
 }
 
-async function request<T>(method: string, path: string, body?: unknown, text = false): Promise<T> {
+/** How an answer is read: JSON, plain text, or raw bytes (the history day records). */
+type Body = 'json' | 'text' | 'bytes';
+
+async function request<T>(method: string, path: string, body?: unknown, text = false, as: Body = text ? 'text' : 'json'): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api/v1${path}`, {
@@ -111,7 +114,7 @@ async function request<T>(method: string, path: string, body?: unknown, text = f
   }
   if (res.status === 204 || res.status === 202) return undefined as T;
   try {
-    return (await (text ? res.text() : res.json())) as T;
+    return (await (as === 'bytes' ? res.arrayBuffer() : as === 'text' ? res.text() : res.json())) as T;
   } catch {
     // Cut off (the timeout) or garbled: as if the unit hadn't answered.
     throw new ApiError(0, null);
@@ -165,6 +168,15 @@ export const api = {
   log: () => request<string>('GET', '/log', undefined, true),
   system: () => request<Schemas['SystemInfo']>('GET', '/system'),
   systemDetails: () => request<Schemas['SystemDetails']>('GET', '/system/details'),
+  /** Today so far, one day record (`lib/dayRecord.ts`); kept in RAM, lost on restart. */
+  historyToday: () => request<ArrayBuffer>('GET', '/history/today', undefined, false, 'bytes'),
+  /** One stored day (`YYYY-MM-DD`) or all stored days of a month (`YYYY-MM`). The unit answers
+   *  an empty body when there is none; for a single day that becomes a 404 here. */
+  historyDays: async (dateOrMonth: string) => {
+    const b = await request<ArrayBuffer>('GET', `/history/days/${dateOrMonth}`, undefined, false, 'bytes');
+    if (b.byteLength === 0 && dateOrMonth.length === 10) throw new ApiError(404, null);
+    return b;
+  },
   setTime: (unix_s: number) => request<void>('POST', '/system/time', { unix_s }),
   reboot: () => request<void>('POST', '/system/reboot'),
   uploadUpdate,

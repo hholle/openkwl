@@ -1,0 +1,86 @@
+{
+  "title": "Verlauf",
+  "intro": "Wie sich Temperaturen, Wärmerückgewinnung und Lüftungsstufen entwickelt haben.",
+  "views": {
+    "label": "Zeitraum",
+    "live": "Live",
+    "last24": "24 Stunden",
+    "day": "Tag",
+    "month": "Monat"
+  },
+  "sensor": {
+    "outdoor": "Außenluft",
+    "supply": "Zuluft",
+    "extract": "Abluft",
+    "exhaust": "Fortluft"
+  },
+  "chart": {
+    "temperatures": "Temperaturen",
+    "power": "Zurückgewonnene Wärme",
+    "powerHint": "Über null wärmt das Gerät die frische Luft, unter null kühlt es sie.",
+    "level": "Lüftungsstufe",
+    "bypass": "Bypass offen",
+    "frost": "Frostschutz"
+  },
+  "live": {
+    "title": "Live",
+    "note": "Zeichnet nur auf, solange diese Seite offen ist: alle 10 Sekunden ein Wert, bis zu 6 Stunden. Neu laden löscht die Aufzeichnung.",
+    "waiting": "Warte auf die ersten Werte …"
+  },
+  "last24": {
+    "title": "Letzte 24 Stunden",
+    "note": "Viertelstunden-Mittelwerte. Der heutige Tag liegt im Speicher des Geräts und beginnt nach einem Neustart von vorn; frühere Tage liegen auf der SD-Karte."
+  },
+  "day": {
+    "previous": "Vorherigen Tag zeigen",
+    "next": "Nächsten Tag zeigen",
+    "today": "Heute zeigen",
+    "inMonth": "{{month}} zeigen",
+    "empty": "An diesem Tag wurde nichts aufgezeichnet",
+    "emptyBody": "Das Gerät legt einen Tag in der Nacht danach auf der SD-Karte ab."
+  },
+  "month": {
+    "previous": "Vorherigen Monat zeigen",
+    "next": "Nächsten Monat zeigen",
+    "empty": "Im {{month}} wurden keine Tage aufgezeichnet",
+    "emptyBody": "Das Gerät schreibt kurz nach Mitternacht einen Eintrag pro Tag. Der erste Tag erscheint am Tag nach dem Update.",
+    "temperatures": "Temperaturen pro Tag",
+    "range": "Niedrigster, mittlerer und höchster Viertelstunden-Mittelwert jedes Tages.",
+    "lowest": "Niedrigster",
+    "mean": "Mittel",
+    "highest": "Höchster",
+    "energy": "Zurückgewonnene Wärme pro Tag",
+    "levels": "Stunden je Lüftungsstufe",
+    "days": "Tage",
+    "dayCol": "Tag",
+    "openDay": "{{date}} zeigen",
+    "partialNote": "Unvollständige Tage (das Gerät wurde gestartet, neu gestartet oder hat an dem Tag seine Uhrzeit bekommen) sind mit ◐ markiert und zählen nur die aufgezeichneten Stunden.",
+    "partial": "Unvollständiger Tag: {{hours}} aufgezeichnet"
+  },
+  "stats": {
+    "heating": "Zurückgewonnene Wärme",
+    "cooling": "Zurückgewonnene Kälte",
+    "degreeDays": "Heizgradtage",
+    "degreeDaysHint": "G20/15: für jeden Tag mit einer mittleren Außentemperatur unter 15 °C die Differenz von 20 °C zu diesem Mittel.",
+    "efficiency": "Wärmerückgewinnung (geschätzt)",
+    "efficiencyHint": "(Zuluft − Außenluft) ÷ (Abluft − Außenluft), aus Viertelstunden mit laufenden Ventilatoren, geschlossenem Bypass, ohne Frostschutz und mit mindestens 5 K zwischen Außen- und Abluft.",
+    "outdoorMean": "Außenluft, Mittel",
+    "extractMean": "Abluft, Mittel",
+    "range": "{{min}} bis {{max}}",
+    "bypass": "Bypass offen",
+    "frost": "Frostschutz",
+    "fans": "Ventilatordrehzahl, Mittel",
+    "fansValue": "{{supply}} / {{exhaust}}",
+    "fansHint": "Zuluft- / Abluftventilator, während sie laufen.",
+    "recorded": "Aufgezeichnet",
+    "daysValue": "{{days}} von {{total}} Tagen"
+  },
+  "load": {
+    "failed": "Der Verlauf konnte nicht geladen werden.",
+    "unsupported": "Diese Firmware zeichnet noch keinen Verlauf auf.",
+    "unreadable": "Das Gerät hat Verlaufsdaten geschickt, die diese Seite nicht lesen kann. Aktualisiere die Weboberfläche zusammen mit der Firmware.",
+    "retry": "Erneut versuchen",
+    "empty": "Noch nichts aufgezeichnet",
+    "emptyBody": "Das Gerät zeichnet Viertelstunden-Mittelwerte auf; der erste erscheint 15 Minuten nach dem Start. Die Werte von heute liegen im Speicher und beginnen nach einem Neustart von vorn."
+  }
+}

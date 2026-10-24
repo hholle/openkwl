@@ -164,7 +164,6 @@ async fn main(spawner: Spawner) {
         Output::new(p.PE6, Level::Low, Speed::Low),
         Output::new(p.PD8, Level::Low, Speed::Low),
         Output::new(p.PD9, Level::Low, Speed::Low),
-        Output::new(p.PD14, Level::Low, Speed::Low),
     ] {
         core::mem::forget(pin);
     }

@@ -1,10 +1,13 @@
 // Development only (`pnpm dev`, /design): every AirflowSchematic state at both sizes, laid out
 // like the design system's preview so the two can be compared side by side. Not in the build.
 import { Box, Card, Group, SimpleGrid, Text } from '@mantine/core';
-import type { Status } from '../api/client';
+import { ApiError, api, type Status } from '../api/client';
 import { AirflowSchematic, type AirflowProps } from '../components/AirflowSchematic';
 import { StatusBadge } from '../components/StatusBadge';
+import { concat, encodeRecord, type RecordInit, sampleDay } from '../lib/dayRecordFixtures';
 import { statusWith } from '../lib/fixtures';
+import { recordLive } from '../lib/history';
+import { HistoryPage } from './History';
 import { Overview } from './Overview';
 
 const NORMAL = { outdoor: 9.2, exhaust: 12.5, supply: 19.6, extract: 21.9, efficiency: 83 };
@@ -66,8 +69,61 @@ const OVERVIEW: Record<string, Status> = {
   manual: statusWith({ control: { mode: 'manual', level: 3, base: 'manual', manual_level: 3 } }),
 };
 
+/** History with generated day records: /design?history=<view> (live, day, month; nothing
+ *  recorded: …&empty; firmware without history: …&missing). */
+function mockHistory(q: URLSearchParams) {
+  const today = SAMPLE_TIME.slice(0, 10);
+  const notFound = () => Promise.reject(new ApiError(404, null));
+  if (q.has('missing')) {
+    api.historyToday = notFound;
+    api.historyDays = notFound;
+    return;
+  }
+  if (q.has('empty')) {
+    api.historyToday = async () => encodeRecord({ date: today, recordedS: 60, levelS: [0, 0, 60, 0, 0] });
+    api.historyDays = (d) => (d.length === 7 ? Promise.resolve(new ArrayBuffer(0)) : notFound());
+    return;
+  }
+  const withBands = (r: RecordInit): RecordInit => ({
+    ...r,
+    bypassS: 3 * 3600,
+    frostS: 3600,
+    quarters: r.quarters?.map((x, i) => (x ? { ...x, bypass: i >= 52 && i < 64, frost: i >= 20 && i < 24 } : x)),
+  });
+  const day = (date: string): RecordInit => {
+    const n = Number(date.slice(8, 10));
+    const r = sampleDay(date, { upTo: n === 3 ? 40 : 96, shift: 4 * Math.sin(n / 3) - n / 4 });
+    return n % 5 === 0 ? withBands(r) : r;
+  };
+  api.historyToday = async () => encodeRecord(sampleDay(today, { upTo: 58, shift: -3 }));
+  api.historyDays = async (d) => {
+    if (d.length === 10) return d < today ? encodeRecord(day(d)) : notFound();
+    const dates = Array.from({ length: 31 }, (_, i) => `${d}-${String(i + 1).padStart(2, '0')}`).filter((x) => x < today && x !== `${d}-08`);
+    return concat(dates.map((x) => encodeRecord(day(x))));
+  };
+  // Half an hour of live readings, with a gap where the page was closed.
+  const now = Date.now();
+  for (let s = 1800; s > 0; s -= 10) {
+    if (s > 900 && s < 1200) continue;
+    recordLive(statusWith({ temperatures: { outdoor: 9 + Math.sin(s / 300), supply: 19.6, extract: 21.9 + Math.cos(s / 400) / 2, exhaust: 12.5 }, control: { level: s < 600 ? 3 : 2 } }), now - s * 1000);
+  }
+}
+
+const SAMPLE_TIME = statusWith({}).time!;
+
 export function DesignPreview() {
   const q = new URLSearchParams(window.location.search);
+  const history = q.get('history');
+  if (history) {
+    mockHistory(q);
+    return (
+      <Box className="app-main" mih="100vh" p={{ base: 'md', sm: 'xl' }}>
+        <Box maw={1040} mx="auto">
+          <HistoryPage view={history} status={statusWith({})} />
+        </Box>
+      </Box>
+    );
+  }
   const name = q.get('overview');
   if (name) {
     const status = OVERVIEW[name] ?? OVERVIEW.normal!;

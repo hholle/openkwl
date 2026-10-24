@@ -38,10 +38,8 @@ static DETAILS: BlockingMutex<CriticalSectionRawMutex, RefCell<ModuleDetails>> =
     knx_timeouts: 0,
     knx_rx_bytes: 0,
     knx_line_errors: 0,
-    knx_last_rx: None,
+    bus_sense_mv: 0,
 }));
-/// Unusable receptions written to the log after each power-up; the counters keep counting.
-const LOGGED_BAD: u8 = 5;
 
 const OVER_MV: u32 = 1000;
 const OVER_MS: u64 = 1000;
@@ -52,7 +50,9 @@ const TRIPS: u8 = 4;
 const MODULE_BOOT: Duration = Duration::from_secs(10);
 
 pub fn details() -> ModuleDetails {
-    DETAILS.lock(|d| d.borrow().clone())
+    let mut d = DETAILS.lock(|d| d.borrow().clone());
+    d.bus_sense_mv = SENSE_MV.load(Ordering::Relaxed);
+    d
 }
 
 fn set_power(p: BusPower) {
@@ -127,7 +127,7 @@ pub fn uart_init() {
         set(RCC_AHB1ENR, 0, 1 << 0); // GPIOA
         set(RCC_APB2ENR, 0, 1 << 4); // USART1
         set(GPIOA_AFRH, 0xFF << 4, 0x77 << 4); // PA9, PA10: AF7
-        set(GPIOA_PUPDR, 0b11 << 20, 0b01 << 20); // PA10 pull-up (idle line high)
+        set(GPIOA_PUPDR, 0b11 << 20, 0); // PA10 no pull, as stock (the transceiver drives it)
         set(GPIOA_MODER, 0b1111 << 18, 0b1010 << 18); // alternate function
     }
     let r = pac::USART1;
@@ -192,32 +192,13 @@ fn transact(de: &mut Output<'static>, frame: &[u8], answer: &mut [u8]) -> Rx {
     }
 }
 
-/// The first 16 bytes in hex ("14 04 20"), by hand: core::fmt costs flash.
-fn hex(bytes: &[u8]) -> heapless::String<{ openkwl_api::KNX_LAST_RX_MAX }> {
-    const DIGITS: &[u8; 16] = b"0123456789abcdef";
-    let mut s = heapless::String::new();
-    for (i, &b) in bytes.iter().take(16).enumerate() {
-        if i > 0 {
-            let _ = s.push(' ');
-        }
-        let _ = s.push(DIGITS[usize::from(b >> 4)] as char);
-        let _ = s.push(DIGITS[usize::from(b & 0xf)] as char);
-    }
-    s
-}
-
-/// Counts a reception in `Technical details`; returns its bytes in hex.
-fn record(rx: &Rx, answer: &[u8]) -> heapless::String<{ openkwl_api::KNX_LAST_RX_MAX }> {
-    let h = hex(&answer[..rx.len]);
+/// Counts a reception in `Technical details`.
+fn record(rx: &Rx) {
     DETAILS.lock(|d| {
         let mut d = d.borrow_mut();
         d.knx_rx_bytes = d.knx_rx_bytes.wrapping_add(rx.len as u32);
         d.knx_line_errors = d.knx_line_errors.wrapping_add(rx.line_errors);
-        if rx.len > 0 {
-            d.knx_last_rx = Some(h.clone());
-        }
     });
-    h
 }
 
 fn state(p: Presence) -> KnxState {
@@ -266,39 +247,30 @@ pub async fn knx_task(app: &'static SharedApp, mut de: Output<'static>) {
             Timer::after_millis(500).await;
         }
         Timer::after(MODULE_BOOT).await;
-        let mut logged_bad = 0;
         while powered() {
-            let n = m.request(&mut frame);
+            let n = Module::request(&mut frame);
             let rx = transact(&mut de, &frame[..n], &mut answer);
-            let mut bad = (rx.len > 0).then(|| record(&rx, &answer));
+            record(&rx);
             if rx.len == 0 {
                 m.on_timeout();
             } else {
                 let s = app.lock().await.knx_snapshot();
                 if let Ok((cmd, follow)) = m.on_answer(&answer[..rx.len], &s, &mut frame) {
-                    bad = None;
                     if let Some(c) = cmd {
                         app.lock().await.knx_command(c);
                     }
                     if let Followup::Write { len, .. } | Followup::Read { len, .. } = follow {
                         let rx = transact(&mut de, &frame[..len], &mut answer);
-                        let h = record(&rx, &answer);
+                        record(&rx);
                         if rx.len == 0 {
                             m.on_timeout();
                         } else {
-                            match m.on_followup_answer(&answer[..rx.len], follow) {
-                                Ok(Some(push)) => app.lock().await.knx_push(push),
-                                Ok(None) => {}
-                                Err(_) => bad = Some(h),
+                            if let Ok(Some(push)) = m.on_followup_answer(&answer[..rx.len], follow) {
+                                app.lock().await.knx_push(push);
                             }
                         }
                     }
                 }
-            }
-            if let Some(h) = bad.filter(|_| logged_bad < LOGGED_BAD) {
-                logged_bad += 1;
-                let event = if rx.line_errors > 0 { "unusable answer, line errors:" } else { "unusable answer:" };
-                app.lock().await.knx_log(event, &h);
             }
             let was = DETAILS.lock(|d| d.borrow().knx);
             publish(&m);
@@ -306,15 +278,10 @@ pub async fn knx_task(app: &'static SharedApp, mut de: Output<'static>) {
                 match (was, m.presence) {
                     (_, Presence::Connected) => {
                         info!("bus: KNX module found, firmware {}", m.firmware);
-                        let fw = DETAILS.lock(|d| d.borrow().knx_firmware.clone()).unwrap_or_default();
-                        let mut detail: heapless::String<32> = heapless::String::new();
-                        for part in ["0x", hex(&[m.address]).as_str(), ", firmware ", fw.as_str()] {
-                            let _ = detail.push_str(part);
-                        }
-                        app.lock().await.knx_log("module found at", &detail);
+                        app.lock().await.knx_found(m.firmware);
                     }
-                    (KnxState::Connected, _) => app.lock().await.knx_log("module lost", ""),
-                    (_, Presence::NotFound) => app.lock().await.knx_log("no module answers, asking every 10 s", ""),
+                    (KnxState::Connected, _) => app.lock().await.knx_log("module lost"),
+                    (_, Presence::NotFound) => app.lock().await.knx_log("no module answers, asking every 10 s"),
                     _ => {}
                 }
             }

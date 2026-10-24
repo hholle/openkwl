@@ -74,6 +74,7 @@ feeds it plain values and carries out what it returns:
 | `App::tick_second(&Inputs, time)` → `Outputs` | Every second, from the control loop | Takes the four temperatures and both fan speeds; runs modes, schedule, holiday, frost, bypass and the filter counter; returns the fan volts and duty and the bypass position |
 | `App::handle` / `password_work` + `handle_hashed` | Per HTTP request to `/api/v1` | Routing, auth, validation, JSON in and out. Password hashing runs between the two calls, without the app lock. |
 | `App::take_writes` → `Writes` | Asked by the storage task | Which files are due for saving (the [write budget](PLAN.md#31-sd-card-write-budget)) |
+| `App::history_finished` | After `Writes::day` | The finished day's record and its place in `HELIOS/DAYS.BIN`; the platform writes it and serves stored days straight from the card (`/history/days/…`) |
 | `App::take_actions` → `Actions` | Every second | One-shot requests: restart, set the clock, reconnect MQTT |
 | `App::ha_state_due`, `App::ha_command` | Every second / per MQTT message | When to publish to Home Assistant; applies commands |
 | `App::set_connectivity` | When it changes | Network, SD card, MQTT and module status, for the API and fault detection |

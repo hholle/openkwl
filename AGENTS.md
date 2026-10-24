@@ -110,10 +110,10 @@ with the reason.
   on 9; Mantine 9 renamed `Grid gutter` to `gap` and `Collapse in` to `expanded`. Check
   https://mantine.dev/llms.txt for v9 APIs. Mantine 9 writes `data-disabled="false"` on an
   enabled SegmentedControl; theme selectors on `[data-disabled]` must exclude `="false"`.
-- Pages: **Overview** (`/`), **Schedule** (`/schedule/:section`) and **Settings**
-  (`/settings/:section`), path routes in `src/lib/router.ts` with redirects from the old
-  routes; the firmware and the simulator answer every path without a `.` with `index.html`.
-  Navigation: header tabs from 420 px, a bottom tab bar below. Schedule and Settings use
+- Pages: **Overview** (`/`), **History** (`/history`, `/history/live|day|month`), **Schedule**
+  (`/schedule/:section`) and **Settings** (`/settings/:section`), path routes in
+  `src/lib/router.ts` with redirects from the old routes; the firmware and the simulator answer every path without a `.` with `index.html`.
+  Navigation: header tabs from 640 px, a bottom tab bar below. Schedule and Settings use
   `SectionList`; each section is a `SettingsSection` with a save bar. Page titles read
   "Page · openKWL". `/design` (only in `pnpm dev`) shows every AirflowSchematic and Overview state.
 - Mode names in Home Assistant stay **Auto, Manual, Party, Quiet, Holiday** (`openkwl-ha`
@@ -132,6 +132,8 @@ with the reason.
   a moment; a button with its own action shows `loading`, then `ActionDone` next to it, and a
   failure as `ActionError` in the same section; the Overview's controls show their new state, and a
   failed command in the hint line. Keep layouts from jumping when feedback appears.
+- Charts: `@mantine/charts` (Recharts) on the *History* page, colours from the theme; it is the
+  biggest part of `app.js` (about 130 KB gzipped).
 - Custom CSS: only the theme's `mantine-overrides.css` classes and
   `components/AirflowSchematic.css`; everything else uses Mantine props and theme tokens.
 - Fonts: Geist and Geist Mono ship in `public/fonts/` with `OFL.txt` (SIL Open Font License;

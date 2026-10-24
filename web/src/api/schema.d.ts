@@ -398,6 +398,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The last 24 hours in 15-minute steps (kept in RAM, lost on restart) */
+        get: operations["getHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/history/days/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Daily statistics of one month (one record a day on the SD card) */
+        get: operations["getHistoryDays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/system/time": {
         parameters: {
             query?: never;
@@ -698,6 +732,48 @@ export interface components {
         };
         /** @description MM-DD, e.g. 03-01. */
         MonthDay: string;
+        /** @description The last 24 hours, oldest point first. Point i of n ended age_s + (n - 1 - i) * interval_s seconds ago. */
+        History: {
+            /** @description Seconds per point (900). */
+            interval_s: number;
+            /** @description Seconds since the newest point ended. */
+            age_s: number;
+            outdoor: components["schemas"]["HistorySeries"];
+            supply: components["schemas"]["HistorySeries"];
+            extract: components["schemas"]["HistorySeries"];
+            exhaust: components["schemas"]["HistorySeries"];
+            /** @description Fan level at the end of each point. */
+            level: number[];
+            /** @description Whether the bypass was open at the end of each point. */
+            bypass_open: boolean[];
+        };
+        /** @description Mean per point in °C; null without a reading. */
+        HistorySeries: (number | null)[];
+        DayTemperature: {
+            /** @description Lowest 15-minute mean in °C. */
+            min: number;
+            /** @description Highest 15-minute mean in °C. */
+            max: number;
+            /** @description Mean over the recorded minutes in °C. */
+            mean: number;
+        };
+        HistoryDay: {
+            date: components["schemas"]["Date"];
+            /** @description Minutes recorded that day: less than 1440 on the day the unit started, restarted or got its clock. */
+            minutes: number;
+            outdoor: components["schemas"]["DayTemperature"] | null;
+            supply: components["schemas"]["DayTemperature"] | null;
+            extract: components["schemas"]["DayTemperature"] | null;
+            exhaust: components["schemas"]["DayTemperature"] | null;
+            /** @description Minutes at each level, 0 (off) to 4. */
+            level_minutes: number[];
+        };
+        HistoryDays: {
+            /** @description YYYY-MM */
+            month: string;
+            /** @description Recorded days, oldest first; days without a record are left out. */
+            days: components["schemas"]["HistoryDay"][];
+        };
         /** @description YYYY-MM-DD, 1970-2099. */
         Date: string;
         /** @description HH:MM. */
@@ -894,6 +970,8 @@ export interface components {
             knx_line_errors: number;
             /** @description The first 16 bytes of the latest reception in hex, e.g. "14 04 20". */
             knx_last_rx: string | null;
+            /** @description Current sense of the module socket (PC2) in mV; above 1000 for a second is an overcurrent. */
+            bus_sense_mv: number;
         };
         /** @description Raw board readings for bring-up, so the pin assumptions can be confirmed on the unit. */
         BoardDetails: {
@@ -1924,6 +2002,52 @@ export interface operations {
                     "text/plain": string;
                 };
             };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Readings, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["History"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    getHistoryDays: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description YYYY-MM */
+                month: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The recorded days, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDays"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
         };
     };

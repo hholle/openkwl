@@ -67,7 +67,7 @@
     "knxFrames": "Answers / checksum errors",
     "knxTimeouts": "No answer",
     "knxRx": "Bytes received / line errors",
-    "knxLastRx": "Last bytes received",
+    "busSense": "Module current sense (PC2)",
     "cardDetect": "Card detect (PH13)",
     "sdPower": "SD power (PA15)",
     "mainsPulses": "Mains pulses (PB3)",
@@ -109,7 +109,6 @@
     "sdPowerHigh": "on when high",
     "perSecond": "{{n}} per second",
     "noneFound": "none found",
-    "ntcSupplyIgnored": "{{measured}} measured, {{used}} used",
     "ntcRaw": "{{raw}} → {{ohms}} Ω"
   },
   "resetReason": {

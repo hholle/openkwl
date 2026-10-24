@@ -4,7 +4,7 @@
 import { formatReading, type ReadingKind } from '../theme/units';
 import { locale, t } from '../i18n';
 
-type ExtraKind = 'percent' | 'power' | 'energy' | 'voltage' | 'hours' | 'days';
+type ExtraKind = 'percent' | 'power' | 'energy' | 'voltage' | 'hours' | 'days' | 'degreeDays';
 
 const EXTRA: Record<ExtraKind, { unit: string; decimals: number }> = {
   percent: { unit: '%', decimals: 0 },
@@ -13,6 +13,8 @@ const EXTRA: Record<ExtraKind, { unit: string; decimals: number }> = {
   voltage: { unit: 'V', decimals: 1 },
   hours: { unit: 'h', decimals: 0 },
   days: { unit: '', decimals: 0 },
+  /** Heating degree-days (Kelvin days). */
+  degreeDays: { unit: 'Kd', decimals: 0 },
 };
 
 /** A reading in the current language's number format (`i18n`), unless `loc` is given. */

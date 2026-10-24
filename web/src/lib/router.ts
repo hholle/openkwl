@@ -1,13 +1,13 @@
-// Path routes for the three pages: `/`, `/schedule/:section`, `/settings/:section`. The unit
+// Path routes for the four pages: `/`, `/schedule/:section`, `/history/:view`, `/settings/:section`. The unit
 // serves index.html for every path without a file extension (firmware/src/http.rs), so these
 // survive a reload. Old links (`#/dashboard`, `/maintenance`, moved Settings sections) redirect.
 import { type MouseEvent, useEffect, useState } from 'react';
 
-export type Page = 'overview' | 'schedule' | 'settings';
+export type Page = 'overview' | 'schedule' | 'history' | 'settings';
 
 export interface Route {
   page: Page;
-  /** Section of Schedule or Settings; null for the list (phones) or Overview. */
+  /** Section of Schedule or Settings, or the History view; null for the list (phones), the default view or Overview. */
   section: string | null;
 }
 
@@ -27,6 +27,7 @@ const HASH_REDIRECTS: Record<string, string> = {
   dashboard: '/',
   overview: '/',
   schedule: '/schedule/week',
+  history: '/history',
   maintenance: '/settings/filters',
   device: '/settings/technical-details',
   settings: '/settings',
@@ -43,7 +44,7 @@ export function redirectFor(path: string, hash = ''): string | null {
 
 export function parseRoute(path: string): Route {
   const [, page, section] = path.split('/');
-  if (page === 'schedule' || page === 'settings') return { page, section: section || null };
+  if (page === 'schedule' || page === 'settings' || page === 'history') return { page, section: section || null };
   return { page: 'overview', section: null };
 }
 

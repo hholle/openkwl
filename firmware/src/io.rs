@@ -72,7 +72,6 @@ pub async fn sensor_task(
         let mv = |v: f32| (v * 1000.0 + 0.5) as u16;
         crate::sysinfo::board_report(|b| {
             b.ntc_supply_mv = Some(mv(measured));
-            b.ntc_supply_used_mv = Some(mv(supply));
             b.ntc_raw.get_or_insert([0; 4])[next] = mean;
         });
         INPUTS.lock(|c| {

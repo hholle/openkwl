@@ -57,3 +57,25 @@ export function dateTime(unixS: number): string {
 export function timeOfDay(ms: number): string {
   return new Intl.DateTimeFormat(locale, { timeStyle: 'medium' }).format(new Date(ms));
 }
+
+/** A browser timestamp (ms) → hours and minutes, e.g. "14:41" / "2:41 PM". */
+export function shortTime(ms: number): string {
+  return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' }).format(new Date(ms));
+}
+
+/** "2026-10" → "October 2026" / "Oktober 2026". */
+export function monthYear(month: string): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(utc(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 1));
+}
+
+/** "2026-10-24" → "Sat 24" / "Sa., 24." (a day within a known month). */
+export function weekdayDay(date: string): string {
+  const d = utc(Number(date.slice(0, 4)), Number(date.slice(5, 7)), Number(date.slice(8, 10)));
+  return new Intl.DateTimeFormat(locale, { weekday: 'short', day: 'numeric', timeZone: 'UTC' }).format(d);
+}
+
+/** "2026-10-24" → "Saturday, 24 October 2026" / "Samstag, 24. Oktober 2026". */
+export function longDate(date: string): string {
+  const d = utc(Number(date.slice(0, 4)), Number(date.slice(5, 7)), Number(date.slice(8, 10)));
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'full', timeZone: 'UTC' }).format(d);
+}

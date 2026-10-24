@@ -67,7 +67,7 @@
     "knxFrames": "Antworten / Prüfsummenfehler",
     "knxTimeouts": "Keine Antwort",
     "knxRx": "Empfangene Bytes / Übertragungsfehler",
-    "knxLastRx": "Zuletzt empfangen",
+    "busSense": "Strommessung Modulsteckplatz (PC2)",
     "cardDetect": "Kartenerkennung (PH13)",
     "sdPower": "SD-Versorgung (PA15)",
     "mainsPulses": "Netzimpulse (PB3)",
@@ -109,7 +109,6 @@
     "sdPowerHigh": "an bei High",
     "perSecond": "{{n}} pro Sekunde",
     "noneFound": "keiner gefunden",
-    "ntcSupplyIgnored": "{{measured}} gemessen, {{used}} verwendet",
     "ntcRaw": "{{raw}} → {{ohms}} Ω"
   },
   "resetReason": {

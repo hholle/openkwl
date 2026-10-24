@@ -9,6 +9,7 @@ import { parseRoute, usePath } from './lib/router';
 import { t } from './i18n';
 import { documentTitle } from './lib/title';
 import { Login } from './pages/Login';
+import { HistoryPage } from './pages/History';
 import { Overview } from './pages/Overview';
 import { SchedulePage } from './pages/Schedule';
 import { SettingsPage } from './pages/Settings';
@@ -117,6 +118,8 @@ function Shell({ isPhone }: { isPhone: boolean }) {
         <Box maw={1040} mx="auto">
           {route.page === 'schedule' ? (
             <SchedulePage section={route.section} status={status.data} />
+          ) : route.page === 'history' ? (
+            <HistoryPage view={route.section} status={status.data} />
           ) : route.page === 'settings' ? (
             <SettingsPage section={route.section} status={status.data} onChanged={status.refresh} />
           ) : (

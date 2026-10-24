@@ -17,21 +17,27 @@ Licensed under the MIT License.
 
 ### Fixed
 
-- **KWL-KNX not found:** openKWL asked address 0x14, but the stock firmware runs the KNX block
-  protocol with address 0x19. It now asks 0x19 first and 0x14 in turn until one answers; the log
-  names the address it was found at.
+- **Module bus silent (KWL-KNX not found):** openKWL drove PD14 low at start-up, which silenced
+  the whole module bus; the stock firmware never touches PD14. It is now left an input, and the
+  KWL-KNX answers at 0x14 (confirmed on a unit). PA10 has no pull-up any more, as in stock.
 - **Temperatures read about 7 K too low:** the sensor supply measured on PC3 is about 3.2 V,
   not 2.5 V; openKWL ignored the measurement as implausible and converted with 2.5 V. It now
   always uses the measurement like the stock firmware (3.2 V only for the first 2 s after start).
 
 ### Added
 
+- **History and statistics** (*History* page): a live view while the page is open, the last
+  24 hours and daily statistics (temperatures, heat-recovery efficiency, recovered heat,
+  heating degree-days, hours per level, bypass and frost protection). The day in progress is
+  kept in RAM in quarter hours; one record a day is written to `HELIOS/DAYS.BIN` after midnight
+  (`GET /api/v1/history/today`, `/history/days/…`, binary day records).
 - **Temperature sensor diagnostics** in *Technical details › Board*: the sensor supply measured on
   PC3 and the one the conversion uses, and each sensor's raw ADC value and resistance
   (`GET /system/details`, `board.ntc_supply_mv`, `ntc_supply_used_mv`, `ntc_raw`).
 - **Module bus diagnostics** in *Technical details › Extension modules*: bytes received, line
-  errors and the last bytes received; the log notes when the KNX module is found or lost and the
-  first unusable answers. The receiver is off while the controller sends.
+  errors, the last bytes received and the module socket's current sense (PC2); the log notes when
+  the KNX module is found (with its address and firmware) or lost and the first unusable answers.
+  The receiver is off while the controller sends.
 - **Own look:** the web UI uses its own petrol accent colour and logo, not the manufacturer's
   brand colours, so it can't be mistaken for an official product.
 - **Safety notice** once after setup in the web UI: experimental, check fans and air direction,

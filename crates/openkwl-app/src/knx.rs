@@ -103,11 +103,14 @@ impl App {
         let _ = self.apply_control(&r);
     }
 
-    /// A module bus event for the log: found, lost, or a reception that could not be used
-    /// (with its first bytes in hex).
-    pub fn knx_log(&mut self, event: &str, detail: &str) {
-        let sep = if detail.is_empty() { "" } else { " " };
-        self.log(format_args!("KNX: {event}{sep}{detail}"));
+    /// A module bus event for the log: lost, not answering, a reception that could not be used.
+    pub fn knx_log(&mut self, event: &str) {
+        self.log(format_args!("KNX: {event}"));
+    }
+
+    /// The module answered; `firmware` is its version × 100.
+    pub fn knx_found(&mut self, firmware: u32) {
+        self.log(format_args!("KNX: module found, firmware {}.{:02}", firmware / 100, firmware % 100));
     }
 
     /// A block the module offered.

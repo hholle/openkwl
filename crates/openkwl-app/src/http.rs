@@ -19,6 +19,7 @@ use crate::{App, SETUP_WINDOW_S, buf::SliceWriter};
 
 pub const JSON: &str = "application/json";
 pub const TEXT: &str = "text/plain; charset=utf-8";
+pub const BINARY: &str = "application/octet-stream";
 /// `PUT /config/import` takes a whole `CONFIG.INI`, larger than JSON bodies.
 pub const IMPORT_BODY_MAX: usize = openkwl_config::CONFIG_MAX_LEN;
 
@@ -463,6 +464,10 @@ impl App {
                 self.log(format_args!("filter interval restarted"));
                 Response::empty(204)
             }
+            (Get, "/history/today") => match self.history.encode(out) {
+                0 => error(ErrorCode::NotFound, "no record yet (clock not set)", out),
+                len => Response { status: 200, content_type: BINARY, len, retry_after_s: None },
+            },
             (Get, "/log") => Response { status: 200, content_type: TEXT, len: self.log.copy_to(out), retry_after_s: None },
             (Get, "/config/export") => {
                 let mut w = SliceWriter::new(out);

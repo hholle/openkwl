@@ -536,6 +536,40 @@ paths:
               schema: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /history/today:
+    get:
+      operationId: getHistoryToday
+      summary: Today's day record so far (kept in RAM, lost on restart)
+      description: |
+        One day record (see `DayRecord` below), quarters not finished yet have level 255.
+      responses:
+        '200':
+          description: One day record
+          content:
+            application/octet-stream:
+              schema: { $ref: '#/components/schemas/DayRecord' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /history/days/{day}:
+    get:
+      operationId: getHistoryDays
+      summary: Stored day records (one written to the SD card after each midnight)
+      parameters:
+        - name: day
+          in: path
+          required: true
+          schema: { type: string, pattern: '^\d{4}-\d{2}(-\d{2})?$' }
+          description: '`YYYY-MM-DD` for one day, `YYYY-MM` for every stored day of the month.'
+      responses:
+        '200':
+          description: The day's record, or the month's records concatenated (oldest first, days without a record left out); empty when there is none
+          content:
+            application/octet-stream:
+              schema: { $ref: '#/components/schemas/DayRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
   /system/time:
     post:
       operationId: setTime
@@ -948,6 +982,21 @@ components:
       pattern: '^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
       description: MM-DD, e.g. 03-01.
 
+    DayRecord:
+      type: string
+      format: binary
+      description: |
+        1216 bytes, little-endian (`openkwl_app::history`):
+        0 "KL", 2 u8 version 1, 3 u8 minutes per point (15), 4 u16 local date as days since
+        1970-01-01, 6 u16 reserved, 8 u32 CRC-32 of bytes 12..1216, 12 u32 seconds recorded,
+        16 5 × u32 seconds at level 0–4, 36 u32 seconds bypass open, 40 u32 seconds frost
+        protection, 44 u32 heat recovered (Wh), 48 u32 cooling recovered (Wh), 52 u16 mean
+        supply fan rpm, 54 u16 mean exhaust fan rpm (while running), 56 reserved,
+        64 + 12 × i for quarter-hour i (0–95) of the local day: 4 × i16 outdoor, supply,
+        extract, exhaust air (0.1 °C, -32768 = no reading), i16 recovered heat power (W,
+        -32768 = none), u8 level (255 = not recorded), u8 flags (bit 0 bypass open, bit 1
+        frost protection).
+
     Date:
       type: string
       pattern: '^\d{4}-\d{2}-\d{2}$'
@@ -1194,7 +1243,7 @@ components:
     ModuleDetails:
       type: object
       description: Extension modules on the RS-485 module bus.
-      required: [bus_power, knx, knx_firmware, knx_frames, knx_errors, knx_timeouts, knx_rx_bytes, knx_line_errors, knx_last_rx]
+      required: [bus_power, knx, knx_firmware, knx_frames, knx_errors, knx_timeouts, knx_rx_bytes, knx_line_errors, bus_sense_mv]
       properties:
         bus_power:
           type: string
@@ -1210,19 +1259,18 @@ components:
         knx_timeouts: { type: integer, minimum: 0, description: Polls without an answer. }
         knx_rx_bytes: { type: integer, minimum: 0, description: 'Bytes received on the module bus since boot, usable or not.' }
         knx_line_errors: { type: integer, minimum: 0, description: 'Bytes received with a framing, noise or overrun error.' }
-        knx_last_rx: { type: [string, 'null'], maxLength: 47, description: 'The first 16 bytes of the latest reception in hex, e.g. "14 04 20".' }
+        bus_sense_mv: { type: integer, minimum: 0, description: 'Current sense of the module socket (PC2) in mV; above 1000 for a second is an overcurrent.' }
 
     BoardDetails:
       type: object
       description: Raw board readings for bring-up, so the pin assumptions can be confirmed on the unit.
-      required: [card_detect_present, sd_power_active_low, mains_pulses_per_s, phy_address, ntc_supply_mv, ntc_supply_used_mv, ntc_raw]
+      required: [card_detect_present, sd_power_active_low, mains_pulses_per_s, phy_address, ntc_supply_mv, ntc_raw]
       properties:
         card_detect_present: { type: [boolean, 'null'], description: 'Card-detect pin (PH13) said "present" at boot.' }
         sd_power_active_low: { type: [boolean, 'null'], description: The SD card switched on with PA15 low (stock) rather than high. }
         mains_pulses_per_s: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Zero-cross pulses per second on PB3 (50/100 on mains, 0 on a bench supply).' }
         phy_address: { type: [integer, 'null'], minimum: 0, maximum: 31, description: Management address of the Ethernet PHY found by the scan. }
         ntc_supply_mv: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Supply of the temperature sensors as measured on PC3, in mV.' }
-        ntc_supply_used_mv: { type: [integer, 'null'], minimum: 0, maximum: 65535, description: 'Supply the temperature conversion uses, in mV: the measurement, or 3200 during the first 2 s after start.' }
         ntc_raw:
           type: [array, 'null']
           items: { type: integer, minimum: 0, maximum: 4095 }
