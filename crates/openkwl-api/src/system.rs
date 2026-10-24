@@ -169,7 +169,6 @@ pub struct ModuleDetails {
     pub bus_sense_mv: u32,
 }
 
-
 /// Raw board readings for bring-up: what the firmware found instead of assuming it.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BoardDetails {

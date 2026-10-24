@@ -116,7 +116,13 @@ fn handle(mut stream: TcpStream, app: &Mutex<App>, www: Option<&Path>, sd: &Path
             return respond(&mut stream, 401, "application/json", br#"{"error":"unauthorized","message":"log in first"}"#, "");
         }
         let Some((first, count)) = days_requested(arg) else {
-            return respond(&mut stream, 400, "application/json", br#"{"error":"bad_request","message":"use YYYY-MM or YYYY-MM-DD"}"#, "");
+            return respond(
+                &mut stream,
+                400,
+                "application/json",
+                br#"{"error":"bad_request","message":"use YYYY-MM or YYYY-MM-DD"}"#,
+                "",
+            );
         };
         let mut body = Vec::new();
         for day in first..first + u16::from(count) {

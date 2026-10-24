@@ -143,7 +143,12 @@ impl Card {
 /// it, as the firmware (`openkwl_app::history`).
 pub fn days_write(sd: &Path, offset: u32, record: &[u8]) -> io::Result<()> {
     use std::io::{Seek, SeekFrom, Write};
-    let mut f = fs::OpenOptions::new().create(true).truncate(false).read(true).write(true).open(sd.join(DIR).join(DAYS))?;
+    let mut f = fs::OpenOptions::new()
+        .create(true)
+        .truncate(false)
+        .read(true)
+        .write(true)
+        .open(sd.join(DIR).join(DAYS))?;
     if f.metadata()?.len() < u64::from(offset) {
         f.set_len(u64::from(offset))?;
     }
