@@ -53,6 +53,9 @@ included in this repository or in its releases.
   from the fan speed ([how](docs/AIRFLOW.md)).
 - **Updates from the browser.** One checked `.okwl` file holds the firmware and the web UI and
   is installed by the stock bootloader ([how it works](docs/UPDATING.md)).
+- **History and statistics:** the last 24 hours, days and months with temperatures,
+  heat-recovery efficiency, recovered heat, heating degree-days and hours per level, with one
+  SD card write a day.
 - **Readable settings.** `CONFIG.INI` on the SD card, imported from the stock firmware with
   one command.
 - NTP time with EU summer time, mDNS (`http://<name>.local/`), a filter reminder, bypass seasons,
@@ -69,8 +72,9 @@ included in this repository or in its releases.
 
 > [!WARNING]
 > **openKWL is experimental.** It first booted on one unit (KWL EC 300 W R) on 2026-10-17 and
-> has run there for a few days, with no frost season yet. Every other model is untested, and so
-> are the KNX module and the firmware update from the web UI. See [Project status](#project-status).
+> has run there for a few days, with no frost season yet. Every other model is untested. The KNX
+> module and the firmware update from the web UI work on that unit; going back to the original
+> firmware from the web UI has not been tried yet. See [Project status](#project-status).
 
 - **No warranty.** openKWL is provided as is, without any warranty to the extent the law
   allows, and you install it at your own risk. It is an independent project, not affiliated
@@ -105,7 +109,7 @@ The stock main-controller image is **one image for the whole first easyControls 
 | **Tested** | KWL EC 300 W R (articles 04232001–003, 04232050/51) |
 | **Same platform, untested** | KWL EC 200/220/270/300/340/370/500 in their W, ET and D variants |
 | **Not supported** | Pre- and post-heaters (EVH models, EH-Basis/ERW/SEWT/LEWT), the BEC/KWL-BE wall panels and sensor modules, easyControls 3.x, units still on firmware 1.x |
-| **Extension module** | KWL-KNX: driven like the stock firmware (implemented, not yet tested on a unit) |
+| **Extension module** | KWL-KNX: driven like the stock firmware; tested on one unit (module firmware 0.16) |
 
 > [!IMPORTANT]
 > **A KWL-BEC wall panel stops working** under openKWL: the panel is not driven, so it shows no
@@ -157,9 +161,9 @@ original card stays untouched:
 3. Build openKWL: `firmware/card.sh <settings.ini>`.
 4. Install and test.
 
-Once the normal build runs, later versions are designed to install from *Settings › Firmware
-update*, without opening the unit ([details](docs/UPDATING.md)). That path is tested in the
-simulator, not yet on a unit.
+Once the normal build runs, later versions install from *Settings › Firmware update*, without
+opening the unit ([details](docs/UPDATING.md)). Tested on one unit (2026-10-24); going back to
+the original firmware that way has not been tried yet.
 
 ## Documentation
 
@@ -204,8 +208,9 @@ It has not been through a frost season yet.
 |---|---|
 | Control logic (frost, bypass, fans, NTC, efficiency) | Reimplements the behaviour observed in the stock 2.24 firmware; tested on the host and in the simulator; running on one unit for a few days; defrosting not yet seen on the unit |
 | Web UI, REST API, Home Assistant | Implemented; tested on the host and in the simulator |
-| Firmware update from the web UI | Tested in the simulator; not yet run on a unit |
-| KNX module | Implemented from the stock firmware's observed behaviour; not yet tested on a unit |
+| Firmware update from the web UI | Tested on one unit (2026-10-24) and in the simulator; going back to the original firmware from the web UI not tried yet |
+| KNX module | Tested on one unit (KWL-KNX firmware 0.16, 2026-10-24): found at address 0x14, level and Auto from KNX work; the other blocks still to watch |
+| History and statistics | Tested on the host and in the simulator; the first daily write on the unit still to see |
 | Other models, BEC panel, heaters | Untested / not supported |
 
 Still to confirm on the unit ([details](docs/PLAN.md#2-to-confirm-on-the-unit-first-test)):

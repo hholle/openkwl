@@ -10,8 +10,9 @@ entities; they are marked **Breaking**.
 ## [Unreleased]
 
 First public version, in preparation. First booted on one KWL EC 300 W R on 2026-10-17 and has
-run there for a few days, with no frost season yet. Not yet tried on a unit: the firmware update
-from the web UI and the KNX module.
+run there for a few days, with no frost season yet. The firmware update from the web UI and the
+KNX module work on that unit (2026-10-24); going back to the original firmware from the web UI
+has not been tried yet.
 
 Licensed under the MIT License.
 
@@ -68,7 +69,7 @@ Licensed under the MIT License.
 - **Settings and counters on the SD card** within a write budget: settings files saved
   power-cut safe (backup first), counters and mode alternately in `STATEA.BIN`/`STATEB.BIN`,
   prompt mode saves capped at 6 a day, a filter reset saved at once.
-- **KWL-KNX extension module** support, as in the stock firmware (not yet tested on a unit).
+- **KWL-KNX extension module** support, as in the stock firmware (tested on one unit).
 - **Firmware and web UI updates from the web UI** with one checked `.okwl` file
   (`openkwl-pack bundle`, `firmware/card.sh`).
 - **NTC supply measurement** on PC3, as in the stock firmware.

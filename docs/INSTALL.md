@@ -18,7 +18,7 @@ off mains:
 |---|---|
 | First installation with the dry run (recommended, step 3) | 2: second card with the original image in; then openKWL onto it |
 | First installation without the dry run | 1 |
-| Updates and going back to stock from the web UI (normal build, [UPDATING.md](UPDATING.md)) | 0; not yet tried on a unit |
+| Updates and going back to stock from the web UI (normal build, [UPDATING.md](UPDATING.md)) | 0; updates tried on one unit, going back not yet |
 | Going back by SD card (step 6), reading the `sd-log` debug log, or moving from the debug build to the normal build | 1 each |
 
 To open the cover as rarely as possible, read the settings before you open it (*Before you open
@@ -50,7 +50,7 @@ Not covered:
 - **Pre- and post-heaters (EVH, KWL-EM/ERW, EH-Basis, SEWT/LEWT) are never switched on.** If your
   unit has one fitted and needs it for frost protection, stay with the original firmware. A
   heater that is only *configured* in the stock settings but not fitted doesn't matter.
-- **The KNX module (KWL-KNX) is untested with openKWL.** It is driven like the stock firmware
+- **The KNX module (KWL-KNX) is tested on one unit only.** It is driven like the stock firmware
   (*Settings › Technical details › Extension modules* shows whether it answers). If it does not
   work, it is not damaged and works again with the original firmware.
 - **Untested hardware details**, for example which fan output is supply and which is exhaust,
@@ -264,8 +264,7 @@ web UI's *Settings › Technical details › Show log* has the app's own events.
 ## Later updates: from the web UI
 
 Once the normal build runs (not the `--sd-log` debug build, which has no room for it), new
-versions are designed to install without a card swap. This is tested in the simulator, not yet
-on a unit:
+versions install without a card swap (tried on one unit, 2026-10-24):
 
 1. Build the update file: `firmware/card.sh <settings.ini>` also writes `card/openkwl.okwl`
    (firmware and web UI in one file).

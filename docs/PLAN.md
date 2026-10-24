@@ -15,8 +15,8 @@ are in the repository.
    lists what is still unconfirmed.
 2. **KNX module (KWL-KNX)**: implemented (section 4); found on a unit (2026-10-24, firmware 0.16,
    level and Auto from KNX work); the remaining blocks still to watch.
-3. **Firmware update from the web UI**: implemented (section 5); to try on the unit once the
-   normal build runs there (the `sd-log` debug build has no room for it).
+3. **Firmware update from the web UI**: implemented (section 5); works on a unit (2026-10-24).
+   Still to try there: going back to the original firmware with a stock-only `.okwl`.
 4. Optional, later: MQTT over TLS (`embedded-tls`, about 35 KB of RAM), only if a broker outside
    the LAN is needed.
 5. **History and statistics**: implemented (2026-10-24, `openkwl_app::history`, the *History*

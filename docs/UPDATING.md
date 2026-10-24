@@ -1,13 +1,13 @@
 # Updating openKWL
 
-Once openKWL runs on your unit, new versions are designed to install from the web UI: no card
+Once openKWL runs on your unit, new versions install from the web UI: no card
 swap and no opening the unit. The first installation always goes by SD card
 ([INSTALL.md](INSTALL.md)).
 
 > [!WARNING]
-> The update from the web UI is tested in the simulator and in host tests, but **has not run on
-> a unit yet**. Until it has, keep the SD-card way back ready
-> ([INSTALL.md, step 6](INSTALL.md#step-6-go-back-to-the-original-firmware)).
+> The update from the web UI has run on one unit (2026-10-24) and is tested in the simulator and
+> in host tests. **Going back to the original firmware this way has not been tried yet**: keep
+> the SD-card way back ready ([INSTALL.md, step 6](INSTALL.md#step-6-go-back-to-the-original-firmware)).
 
 > [!NOTE]
 > The firmware update is part of the **normal build** only. The `sd-log` and `rtt` debug builds
